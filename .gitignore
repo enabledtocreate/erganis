@@ -1,0 +1,15 @@
+# OS and editor
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+.idea/
+.vscode/
+*.suo
+*.user
+
+# Local env (do not commit secrets)
+.env
+.env.local
+*.local

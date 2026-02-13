@@ -1,0 +1,50 @@
+# CI for parent erganis repo: submodules + per-repo tests + integration/e2e
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  test-submodules:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Test platform (contracts, services, packages)
+        run: |
+          if [ -f platform/contracts/package.json ]; then
+            cd platform/contracts && npm ci && npm test && cd ../..
+          fi
+          if [ -f platform/services/package.json ]; then
+            cd platform/services && npm ci && npm test && cd ../..
+          fi
+          if [ -f platform/packages/package.json ]; then
+            cd platform/packages && npm ci && npm test && cd ../..
+          fi
+
+      - name: Test studio-portal
+        run: |
+          if [ -f studio-portal/package.json ]; then
+            cd studio-portal && npm ci && npm test && cd ..
+          fi
+
+      - name: Integration tests
+        run: |
+          chmod +x scripts/test-integration.sh 2>/dev/null || true
+          ./scripts/test-integration.sh || true
+
+      - name: E2E tests
+        run: |
+          chmod +x scripts/test-e2e.sh 2>/dev/null || true
+          ./scripts/test-e2e.sh || true

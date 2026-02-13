@@ -1,0 +1,29 @@
+# Example: release and publish (e.g. contracts SDK, packages)
+# Copy to release.yml and customize. Trigger on version tags.
+
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Build and publish
+        run: |
+          # Example: publish contracts SDK or packages
+          # cd contracts && npm ci && npm run build && npm publish --access public
+          echo "Add your publish steps here"

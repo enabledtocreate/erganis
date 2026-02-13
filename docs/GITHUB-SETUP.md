@@ -1,6 +1,26 @@
 # Erganis — GitHub repo setup
 
-The **parent repo** [erganis](https://github.com/enabledtocreate/erganis) already exists. This guide is for **migrating** to the new structure: remove any old sub-repos and add the **two new sub-repos** (erganis-platform, erganis-app-studio-portal), then wire them as submodules.
+The **parent repo** [erganis](https://github.com/enabledtocreate/erganis) already exists. This guide is for **migrating** to the new structure: archive old repos, create the two new sub-repos, then wire them as submodules.
+
+## Migration: old repos → new structure
+
+| Action | Repos |
+|--------|--------|
+| **Keep** | `enabledtocreate/erganis` (parent) |
+| **Archive** (then optionally delete) | `erganis-stack`, `erganis-docs`, `erganis-database`, `erganis-backend`, `erganis-frontend`, `erganis-api`, `erganis-contracts` |
+| **Create** | `erganis-platform`, `erganis-app-studio-portal` |
+
+To archive the old repos in one go (requires [GitHub CLI](https://cli.github.com/), logged in as **enabledtocreate**):
+
+```powershell
+.\scripts\archive-old-repos.ps1
+```
+
+Or: `./scripts/archive-old-repos.sh`
+
+Archived repos stay visible but become read-only. You can delete them later from each repo’s **Settings → Danger zone** if you want.
+
+---
 
 ## 0. Create the two new sub-repos (one-time)
 

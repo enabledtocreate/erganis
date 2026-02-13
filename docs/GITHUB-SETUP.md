@@ -10,15 +10,14 @@ The **parent repo** [erganis](https://github.com/enabledtocreate/erganis) alread
 | **Archive** (then optionally delete) | `erganis-stack`, `erganis-docs`, `erganis-database`, `erganis-backend`, `erganis-frontend`, `erganis-api`, `erganis-contracts` |
 | **Create** | `erganis-platform`, `erganis-app-studio-portal` |
 
-To archive the old repos in one go (requires [GitHub CLI](https://cli.github.com/), logged in as **enabledtocreate**):
-
-```powershell
-.\scripts\archive-old-repos.ps1
-```
-
-Or: `./scripts/archive-old-repos.sh`
-
-Archived repos stay visible but become read-only. You can delete them later from each repo’s **Settings → Danger zone** if you want.
+- **Archive** (read-only, reversible):  
+  `.\scripts\archive-old-repos.ps1` or `./scripts/archive-old-repos.sh`
+- **Delete** (permanent):  
+  `.\scripts\delete-old-repos.ps1` or `./scripts/delete-old-repos.sh`  
+  Requires delete scope: `gh auth refresh -s delete_repo`. You’ll be asked to type `yes` to confirm.
+- **Create the two new sub-repos and push** `platform/` and `studio-portal/` so they appear as separate GitHub repos:  
+  `.\scripts\push-subrepos.ps1` or `./scripts/push-subrepos.sh`  
+  Run from the erganis repo root. This creates **erganis-platform** and **erganis-app-studio-portal** if they don’t exist, then pushes the contents of `platform/` and `studio-portal/` to them.
 
 ---
 

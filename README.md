@@ -56,7 +56,8 @@ The parent also holds [.github](.github/) (CI/CD), [docs](docs/), [tests](tests/
 ## GitHub organization
 
 - **Account:** [enabledtocreate](https://github.com/enabledtocreate)
-- Repos: `erganis` (parent), `erganis-platform`, `erganis-app-studio-portal`
+- **Parent:** [erganis](https://github.com/enabledtocreate/erganis) (this repo; already exists)
+- **Sub-repos:** `erganis-platform`, `erganis-app-studio-portal` (added when migrating to the two-repo structure)
 
 ## Cloning with submodules (full platform)
 

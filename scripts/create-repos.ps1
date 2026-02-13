@@ -1,16 +1,16 @@
-# Create Erganis GitHub repos (parent + two sub-repos). Run after: gh auth login
+# Create the two new Erganis sub-repos (erganis already exists). Run after: gh auth login
 # Requires: GitHub CLI (gh) - https://cli.github.com/
 
 $ErrorActionPreference = "Stop"
 $org = "enabledtocreate"
 
+# Only the two new sub-repos; parent erganis already exists
 $repos = @(
-    @{ Name = "erganis"; Description = "Erganis - open-source platform (parent repo)" },
     @{ Name = "erganis-platform"; Description = "Contracts, infrastructure, services, packages, scripts (one repo)" },
     @{ Name = "erganis-app-studio-portal"; Description = "Studio and client portal apps (one repo, two folders)" }
 )
 
-Write-Host "Creating repos under GitHub account: $org" -ForegroundColor Cyan
+Write-Host "Creating two sub-repos under GitHub account: $org (parent erganis already exists)" -ForegroundColor Cyan
 Write-Host ""
 
 foreach ($r in $repos) {

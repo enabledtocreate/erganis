@@ -1,19 +1,21 @@
 # Erganis — GitHub repo setup
 
-Use this guide to create the GitHub repositories and wire the **two sub-repos** as submodules.
+The **parent repo** [erganis](https://github.com/enabledtocreate/erganis) already exists. This guide is for **migrating** to the new structure: remove any old sub-repos and add the **two new sub-repos** (erganis-platform, erganis-app-studio-portal), then wire them as submodules.
 
-## 0. Enable repo creation (one-time)
+## 0. Create the two new sub-repos (one-time)
+
+You only need to create **erganis-platform** and **erganis-app-studio-portal**. The parent **erganis** already exists.
 
 ### Option A: GitHub CLI (recommended)
 
 1. **Install GitHub CLI** — [cli.github.com](https://cli.github.com/) or `winget install GitHub.cli` / `brew install gh`
 2. **Log in:** `gh auth login` (sign in as **enabledtocreate**)
-3. **Create repos** — From the `erganis` folder:
+3. **Create the two new repos** — From the `erganis` folder:
    ```powershell
    .\scripts\create-repos.ps1
    ```
    Or: `./scripts/create-repos.sh`  
-   This creates **3** public repos: `erganis`, `erganis-platform`, `erganis-app-studio-portal`. Existing repos are skipped.
+   This creates only **erganis-platform** and **erganis-app-studio-portal**. Existing repos are skipped.
 
 ### Option B: Create repos manually
 
@@ -21,23 +23,24 @@ On [github.com/new](https://github.com/new), create under **enabledtocreate** (n
 
 | Repo name | Purpose |
 |-----------|---------|
-| `erganis` | Parent meta-repo |
 | `erganis-platform` | Contracts, infrastructure, services, packages, scripts (one repo) |
 | `erganis-app-studio-portal` | Studio and client portal (one repo, two folders) |
 
 ---
 
-## 1. Push parent repo first
+## 1. Push updated parent repo
+
+Your local `erganis` has the new layout (platform/, studio-portal/). Push to the existing **erganis** repo:
 
 ```bash
 cd erganis
-git init
-git add .
-git commit -m "Initial structure and README"
 git remote add origin https://github.com/enabledtocreate/erganis.git
+# If you already have origin, skip the line above
 git branch -M main
 git push -u origin main
 ```
+
+If the repo already had a different structure, resolve any conflicts; the goal is for `main` to contain the new parent layout (docs, scripts, .github, platform/, studio-portal/).
 
 ## 2. Push platform sub-repo
 
@@ -67,9 +70,9 @@ git push -u origin main
 cd ..
 ```
 
-## 4. Add submodules to parent (optional)
+## 4. Switch to submodules (optional)
 
-If you want the parent to track `platform/` and `studio-portal/` as submodules (so `git clone --recurse-submodules erganis` gets both):
+If you want the parent to track `platform/` and `studio-portal/` as submodules (so `git clone --recurse-submodules erganis` gets both), remove the folders from the index and add them as submodules. If the parent previously had other submodules, remove those first (e.g. `git submodule deinit <path>`, `git rm <path>`), then add the new ones:
 
 ```bash
 cd erganis
@@ -78,7 +81,7 @@ git commit -m "Remove subdirs before adding as submodules"
 git submodule add https://github.com/enabledtocreate/erganis-platform.git platform
 git submodule add https://github.com/enabledtocreate/erganis-app-studio-portal.git studio-portal
 git add .gitmodules platform studio-portal
-git commit -m "Add submodules"
+git commit -m "Add submodules: platform, studio-portal"
 git push
 ```
 

@@ -1,17 +1,17 @@
 #!/usr/bin/env bash
-# Create Erganis GitHub repos (parent + two sub-repos). Run after: gh auth login
+# Create the two new Erganis sub-repos (erganis already exists). Run after: gh auth login
 # Requires: GitHub CLI (gh) - https://cli.github.com/
 
 set -e
 ORG="enabledtocreate"
 
+# Only the two new sub-repos; parent erganis already exists
 repos=(
-    "erganis:Erganis - open-source platform (parent repo)"
     "erganis-platform:Contracts, infrastructure, services, packages, scripts (one repo)"
     "erganis-app-studio-portal:Studio and client portal apps (one repo, two folders)"
 )
 
-echo "Creating repos under GitHub account: $ORG"
+echo "Creating two sub-repos under GitHub account: $ORG (parent erganis already exists)"
 echo ""
 
 for entry in "${repos[@]}"; do

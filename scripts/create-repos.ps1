@@ -4,13 +4,14 @@
 $ErrorActionPreference = "Stop"
 $org = "enabledtocreate"
 
-# Only the two new sub-repos; parent erganis already exists
+# Sub-repos; parent erganis already exists
 $repos = @(
-    @{ Name = "erganis-platform"; Description = "Contracts, infrastructure, services, packages, scripts (one repo)" },
-    @{ Name = "erganis-app-studio-portal"; Description = "Studio and client portal apps (one repo, two folders)" }
+    @{ Name = "erganis-platform"; Description = "Contracts, data, infrastructure, services, packages, scripts (one repo)" },
+    @{ Name = "erganis-app-studio-portal"; Description = "Studio and client portal apps (one repo, two folders)" },
+    @{ Name = "erganis-app-id-companion"; Description = "ID Companion mobile app" }
 )
 
-Write-Host "Creating two sub-repos under GitHub account: $org (parent erganis already exists)" -ForegroundColor Cyan
+Write-Host "Creating sub-repos under GitHub account: $org (parent erganis already exists)" -ForegroundColor Cyan
 Write-Host ""
 
 foreach ($r in $repos) {

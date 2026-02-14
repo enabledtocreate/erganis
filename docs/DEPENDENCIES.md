@@ -18,12 +18,13 @@
 | **platform/services** | platform/contracts, platform/data, platform/infrastructure, platform/packages | Relative paths |
 | **platform/packages** | platform/contracts (optional) | Relative path |
 | **studio-portal** (app repo) | API (from platform) | Live URL or generated SDK; no direct reference to platform repo |
+| **id-companion** (app repo) | API (from platform) | Live URL or generated SDK; no direct reference to platform repo |
 
 ## Cloning
 
-- **Full platform:** `git clone --recurse-submodules https://github.com/enabledtocreate/erganis.git` — you get parent + platform + studio-portal.
+- **Full platform:** `git clone --recurse-submodules https://github.com/enabledtocreate/erganis.git` — you get parent + platform + studio-portal + id-companion.
 - **Platform only:** `git clone https://github.com/enabledtocreate/erganis-platform.git` — backend only; all platform folders use relative paths.
-- **App only:** `git clone https://github.com/enabledtocreate/erganis-app-studio-portal.git` — app consumes API via URL or SDK.
+- **App only:** `git clone https://github.com/enabledtocreate/erganis-app-studio-portal.git` or `erganis-app-id-companion.git` — apps consume API via URL or SDK.
 
 ## API: internal vs public
 

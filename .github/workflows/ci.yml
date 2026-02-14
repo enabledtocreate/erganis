@@ -39,6 +39,12 @@ jobs:
             cd studio-portal && npm ci && npm test && cd ..
           fi
 
+      - name: Test id-companion
+        run: |
+          if [ -f id-companion/package.json ]; then
+            cd id-companion && npm ci && npm test && cd ..
+          fi
+
       - name: Integration tests
         run: |
           chmod +x scripts/test-integration.sh 2>/dev/null || true

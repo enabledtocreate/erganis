@@ -1,20 +1,21 @@
-# Create erganis-platform and erganis-app-studio-portal on GitHub (if missing),
-# then push the local platform/ and studio-portal/ folders to them as separate repos.
+# Create erganis-platform, erganis-app-studio-portal, erganis-app-id-companion on GitHub (if missing),
+# then push the local platform/, studio-portal/, and id-companion/ folders to them.
 # Run from the erganis repo root. Requires: GitHub CLI (gh), git.
 
 $ErrorActionPreference = "Stop"
 $org = "enabledtocreate"
 $root = Split-Path -Parent $PSScriptRoot
-if (-not (Test-Path "$root\platform") -or -not (Test-Path "$root\studio-portal")) {
-    Write-Host "Run this from the erganis repo root (parent of platform/ and studio-portal/)." -ForegroundColor Red
+if (-not (Test-Path "$root\platform") -or -not (Test-Path "$root\studio-portal") -or -not (Test-Path "$root\id-companion")) {
+    Write-Host "Run this from the erganis repo root (parent of platform/, studio-portal/, id-companion/)." -ForegroundColor Red
     exit 1
 }
 
-# Create the two repos on GitHub if they don't exist (gh repo create skips if exists)
-Write-Host "Ensuring erganis-platform and erganis-app-studio-portal exist on GitHub ..." -ForegroundColor Cyan
+# Create the repos on GitHub if they don't exist (gh repo create skips if exists)
+Write-Host "Ensuring erganis-platform, erganis-app-studio-portal, erganis-app-id-companion exist on GitHub ..." -ForegroundColor Cyan
 $repos = @(
-    @{ name = "erganis-platform"; desc = "Contracts, infrastructure, services, packages, scripts (one repo)" },
-    @{ name = "erganis-app-studio-portal"; desc = "Studio and client portal apps (one repo, two folders)" }
+    @{ name = "erganis-platform"; desc = "Contracts, data, infrastructure, services, packages, scripts (one repo)" },
+    @{ name = "erganis-app-studio-portal"; desc = "Studio and client portal apps (one repo, two folders)" },
+    @{ name = "erganis-app-id-companion"; desc = "ID Companion mobile app" }
 )
 foreach ($r in $repos) {
     $full = "$org/$($r.name)"
@@ -56,5 +57,9 @@ Write-Host "Pushing studio-portal/ to $org/erganis-app-studio-portal ..." -Foreg
 Push-Subrepo -dir "studio-portal" -repoName "erganis-app-studio-portal" -commitMsg "Initial studio and client portal"
 
 Write-Host ""
-Write-Host "Done. You should now see erganis-platform and erganis-app-studio-portal on GitHub." -ForegroundColor Green
-Write-Host "To switch the parent to submodules: see docs/GITHUB-SETUP.md section 4." -ForegroundColor Cyan
+Write-Host "Pushing id-companion/ to $org/erganis-app-id-companion ..." -ForegroundColor Cyan
+Push-Subrepo -dir "id-companion" -repoName "erganis-app-id-companion" -commitMsg "Initial ID Companion mobile app"
+
+Write-Host ""
+Write-Host "Done. You should now see erganis-platform, erganis-app-studio-portal, and erganis-app-id-companion on GitHub." -ForegroundColor Green
+Write-Host "To switch the parent to submodules: see docs/GITHUB-SETUP.md section 5." -ForegroundColor Cyan

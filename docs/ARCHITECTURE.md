@@ -1,8 +1,8 @@
 # Erganis — Architecture Overview
 
-Erganis uses a **parent + two sub-repos** model with N-tier layering inside the platform.
+Erganis uses a **parent + three sub-repos** model with N-tier layering inside the platform.
 
-## Two sub-repos
+## Three sub-repos
 
 ### 1. **erganis-platform** (path: `platform/`)
 
@@ -27,13 +27,20 @@ Presentation tier — one repo, two app folders:
 - **client-portal/** — Client-facing portal
 - **shared/** — Shared UI and API clients
 
-**Apps consume only the API** (live URL or generated SDK). Future apps (mobile, desktop) can be additional repos.
+**Apps consume only the API** (live URL or generated SDK).
+
+### 3. **erganis-app-id-companion** (path: `id-companion/`)
+
+Mobile app — one repo:
+
+- **app/** — Main mobile application (screens, navigation)
+- **shared/** — Shared logic, API client, utilities
 
 ## Data flow
 
 ```
-studio-portal (apps)
-  ↓ Consumes API only (URL or SDK)
+studio-portal, id-companion (apps)
+  ↓ Consume API only (URL or SDK)
 platform/
   ├── contracts (API surface)
   ├── data (DAL, migrations, SQL)
@@ -45,7 +52,7 @@ platform/
 
 ## Parent repo (erganis)
 
-Holds **docs/**, **tests/** (integration, e2e), **scripts/** (orchestration), **.github/** (CI). Submodules: `platform/` and `studio-portal/`.
+Holds **docs/**, **tests/** (integration, e2e), **scripts/** (orchestration), **.github/** (CI). Submodules: `platform/`, `studio-portal/`, `id-companion/`.
 
 ## Technology flexibility
 

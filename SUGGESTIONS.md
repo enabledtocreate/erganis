@@ -5,7 +5,7 @@
 ### 1. **Testing Structure** *(Recommended approach in docs/TESTING.md)*
 **Issue:** No clear place for tests  
 **Cleanest solution:**
-- **Unit + in-repo integration:** In each repo (`studio-portal/studio/tests/`, `platform/services/*/tests/`, etc.) with that repo’s tooling (Jest, xUnit, pytest).
+- **Unit + in-repo integration:** In each repo (`studio-portal/studio/tests/`, `id-companion/app/tests/`, `platform/services/*/tests/`, etc.) with that repo’s tooling (Jest, xUnit, pytest).
 - **Cross-repo integration + E2E:** In the **parent repo only** under `tests/integration/` and `tests/e2e/`. Run when full platform is checked out (submodules). No separate `erganis-tests` repo.
 - See [docs/TESTING.md](docs/TESTING.md) for full strategy.
 
@@ -29,7 +29,7 @@
 **Issue:** No env var templates  
 **Suggestion:** Add `.env.example` files in each repo:
 - `platform/contracts/.env.example`, `platform/data/.env.example`, `platform/services/.env.example`, `platform/infrastructure/.env.example`
-- `studio-portal/.env.example`
+- `studio-portal/.env.example`, `id-companion/.env.example`
 - Document required vs optional vars
 
 ### 5. **License File**

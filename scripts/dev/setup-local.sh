@@ -29,7 +29,7 @@ echo "Waiting for services to start..."
 sleep 5
 
 # Install dependencies in platform and app repos
-for dir in platform/contracts platform/services platform/packages studio-portal; do
+for dir in platform/contracts platform/services platform/packages studio-portal id-companion; do
   if [ -f "$dir/package.json" ]; then
     echo "Installing dependencies in $dir..."
     (cd "$dir" && npm install)

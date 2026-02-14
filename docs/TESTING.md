@@ -26,6 +26,7 @@ No separate `erganis-tests` repo. Unit/integration that touch only one repo live
 
 - `platform/contracts/tests/` — Schema validation, SDK generation smoke tests
 - `studio-portal/studio/tests/` or `studio-portal/studio/src/**/*.test.tsx` — Unit + component tests (and same for client-portal)
+- `id-companion/app/tests/` or `id-companion/**/*.test.*` — Mobile app unit and component tests
 - `platform/services/business-logic/tests/` — Unit + integration tests for that service
 - `platform/packages/ui/tests/` — Component/library tests
 - `platform/data/tests/` — Data layer tests (DAL, migrations, SQL; mocked DB or test container)

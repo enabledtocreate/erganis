@@ -15,7 +15,7 @@ Thank you for your interest in contributing to Erganis!
 
 ## Adding a New App
 
-Apps are separate repos (e.g. `erganis-app-studio-portal`). To add another app:
+Apps are separate repos (e.g. `erganis-app-studio-portal`, `erganis-app-id-companion`). To add another app:
 
 1. Create a new repo (e.g. `erganis-app-mobile`) and add it as a submodule under `erganis/` (e.g. `mobile-app/`).
 2. Or add a new folder to an existing app repo (e.g. add a third app to `studio-portal/` if it shares code).

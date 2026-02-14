@@ -32,7 +32,7 @@ Write-Host "Waiting for services to start..."
 Start-Sleep -Seconds 5
 
 # Install dependencies
-@("platform/contracts", "platform/services", "platform/packages", "studio-portal") | ForEach-Object {
+@("platform/contracts", "platform/services", "platform/packages", "studio-portal", "id-companion") | ForEach-Object {
     if (Test-Path "$_/package.json") {
         Write-Host "Installing dependencies in $_..."
         Set-Location $_

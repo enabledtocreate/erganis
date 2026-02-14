@@ -5,13 +5,14 @@
 set -e
 ORG="enabledtocreate"
 
-# Only the two new sub-repos; parent erganis already exists
+# Sub-repos; parent erganis already exists
 repos=(
-    "erganis-platform:Contracts, infrastructure, services, packages, scripts (one repo)"
+    "erganis-platform:Contracts, data, infrastructure, services, packages, scripts (one repo)"
     "erganis-app-studio-portal:Studio and client portal apps (one repo, two folders)"
+    "erganis-app-id-companion:ID Companion mobile app"
 )
 
-echo "Creating two sub-repos under GitHub account: $ORG (parent erganis already exists)"
+echo "Creating sub-repos under GitHub account: $ORG (parent erganis already exists)"
 echo ""
 
 for entry in "${repos[@]}"; do

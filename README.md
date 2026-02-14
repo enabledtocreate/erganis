@@ -20,19 +20,24 @@ cd erganis
 git clone https://github.com/enabledtocreate/erganis-platform.git
 cd erganis-platform
 
-# Or just the app
+# Or just an app
 git clone https://github.com/enabledtocreate/erganis-app-studio-portal.git
 cd erganis-app-studio-portal
+
+# Or the mobile app
+git clone https://github.com/enabledtocreate/erganis-app-id-companion.git
+cd erganis-app-id-companion
 ```
 
-The parent ties together **two sub-repos**; each can be used on its own.
+The parent ties together **three sub-repos**; each can be used on its own.
 
-## Repository structure (two sub-repos)
+## Repository structure (three sub-repos)
 
 | Sub-repo | Contents | Purpose |
 |----------|----------|---------|
 | [erganis-platform](platform/) | contracts, data, infrastructure, services, packages, scripts | Backend: API contracts, data layer (DAL/migrations/SQL), Docker/deploy, services, shared libs, tooling |
-| [erganis-app-studio-portal](studio-portal/) | studio, client-portal, shared | Presentation: designer studio and client portal (one repo, two app folders) |
+| [erganis-app-studio-portal](studio-portal/) | studio, client-portal, shared | Web: designer studio and client portal (one repo, two app folders) |
+| [erganis-app-id-companion](id-companion/) | app, shared | Mobile: ID Companion app |
 
 The parent also holds [.github](.github/) (CI/CD), [docs](docs/), [tests](tests/), and [scripts](scripts/) that orchestrate the full platform.
 
@@ -40,9 +45,9 @@ The parent also holds [.github](.github/) (CI/CD), [docs](docs/), [tests](tests/
 
 ```
 ┌─────────────────────────────────────────┐
-│  APPS (studio-portal)                   │
-│  studio/ + client-portal/ + shared/     │
-│  + future app repos (mobile, desktop…)  │
+│  APPS                                   │
+│  studio-portal (studio + client-portal) │
+│  id-companion (mobile)                  │
 └──────────────┬──────────────────────────┘
                │ Consumes API only (URL or SDK)
                ▼
@@ -57,7 +62,7 @@ The parent also holds [.github](.github/) (CI/CD), [docs](docs/), [tests](tests/
 
 - **Account:** [enabledtocreate](https://github.com/enabledtocreate)
 - **Parent:** [erganis](https://github.com/enabledtocreate/erganis) (this repo; already exists)
-- **Sub-repos:** `erganis-platform`, `erganis-app-studio-portal` (added when migrating to the two-repo structure)
+- **Sub-repos:** `erganis-platform`, `erganis-app-studio-portal`, `erganis-app-id-companion`
 
 ## Cloning with submodules (full platform)
 
@@ -74,6 +79,7 @@ From the root of `erganis`:
 ```bash
 git submodule add https://github.com/enabledtocreate/erganis-platform.git platform
 git submodule add https://github.com/enabledtocreate/erganis-app-studio-portal.git studio-portal
+git submodule add https://github.com/enabledtocreate/erganis-app-id-companion.git id-companion
 ```
 
 ## License

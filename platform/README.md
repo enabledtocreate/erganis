@@ -1,13 +1,14 @@
 # Erganis Platform
 
-Single repo for the **tightly coupled backend**: contracts, infrastructure, services, packages, and scripts. Everything that cannot stand alone lives here.
+Single repo for the **tightly coupled backend**: contracts, data, infrastructure, services, packages, and scripts. Everything that cannot stand alone lives here.
 
 ## Structure
 
 | Folder | Purpose |
 |--------|---------|
 | **contracts/** | Schemas and auto-generated SDKs; core + public API |
-| **infrastructure/** | DAL, migrations, SQL, Docker, deployment |
+| **data/** | Data layer: DAL, migrations, SQL |
+| **infrastructure/** | Runtime & deploy: Docker, deployment (IaC) |
 | **services/** | API gateway, business logic, background jobs |
 | **packages/** | Shared UI libraries, loggers, utilities |
 | **scripts/** | Setup, deploy, dev, maintenance |

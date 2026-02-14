@@ -23,13 +23,13 @@ echo "Waiting for services to start..."
 sleep 5
 
 # Optional: run migrations when they exist
-# if [ -d "infrastructure/migrations" ]; then
+# if [ -d "data/migrations" ]; then
 #   echo "Running database migrations..."
-#   (cd infrastructure && npm run migrate 2>/dev/null) || true
+#   (cd data && npm run migrate 2>/dev/null) || true
 # fi
 
 # Install dependencies in platform folders that have package.json
-for dir in contracts services packages; do
+for dir in contracts data services packages; do
   if [ -f "$dir/package.json" ]; then
     echo "Installing dependencies in $dir..."
     (cd "$dir" && npm install)

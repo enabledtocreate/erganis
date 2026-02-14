@@ -16,7 +16,7 @@ cd erganis
 **Single project** — clone only what you need:
 
 ```bash
-# Platform (contracts, services, infrastructure, packages, scripts)
+# Platform (contracts, data, infrastructure, services, packages, scripts)
 git clone https://github.com/enabledtocreate/erganis-platform.git
 cd erganis-platform
 
@@ -31,7 +31,7 @@ The parent ties together **two sub-repos**; each can be used on its own.
 
 | Sub-repo | Contents | Purpose |
 |----------|----------|---------|
-| [erganis-platform](platform/) | contracts, infrastructure, services, packages, scripts | Backend: API contracts, DAL, services, shared libs, tooling |
+| [erganis-platform](platform/) | contracts, data, infrastructure, services, packages, scripts | Backend: API contracts, data layer (DAL/migrations/SQL), Docker/deploy, services, shared libs, tooling |
 | [erganis-app-studio-portal](studio-portal/) | studio, client-portal, shared | Presentation: designer studio and client portal (one repo, two app folders) |
 
 The parent also holds [.github](.github/) (CI/CD), [docs](docs/), [tests](tests/), and [scripts](scripts/) that orchestrate the full platform.
@@ -48,8 +48,8 @@ The parent also holds [.github](.github/) (CI/CD), [docs](docs/), [tests](tests/
                ▼
 ┌─────────────────────────────────────────┐
 │  PLATFORM (one repo)                     │
-│  contracts → infrastructure → services   │
-│  packages, scripts                       │
+│  contracts → data → infrastructure → services │
+│  packages, scripts                      │
 └─────────────────────────────────────────┘
 ```
 

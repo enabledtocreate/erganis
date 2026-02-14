@@ -2,7 +2,7 @@
 
 The parent **erganis** repo has **two submodules**:
 
-- **platform/** — `erganis-platform` (contracts, infrastructure, services, packages, scripts)
+- **platform/** — `erganis-platform` (contracts, data, infrastructure, services, packages, scripts)
 - **studio-portal/** — `erganis-app-studio-portal` (studio, client-portal, shared)
 
 ## Why submodules?

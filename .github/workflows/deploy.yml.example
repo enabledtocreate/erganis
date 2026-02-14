@@ -19,6 +19,6 @@ jobs:
       - name: Deploy
         run: |
           # Example: build Docker images, run migrations, deploy to your environment
-          # cd infrastructure/docker && docker-compose build
+          # cd platform/infrastructure/docker && docker compose build
           # Run migrations, deploy to cloud, etc.
           echo "Add your deploy steps here"

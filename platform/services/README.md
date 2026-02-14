@@ -11,7 +11,7 @@
 
 ## Services
 
-Services implement business logic and expose APIs consumed by **apps**. They interact with **infrastructure** for persistence and may use **packages** for shared utilities.
+Services implement business logic and expose APIs consumed by **apps**. They use the **data layer** (`../data/`) for persistence and may use **packages** for shared utilities.
 
 ## Technology stacks
 
@@ -38,5 +38,5 @@ Copy `.env.example` to `.env` and set values.
 ## Related repos
 
 - **erganis-contracts** — API contracts and schemas
-- **erganis-infrastructure** — Database and persistence layer
+- **platform/data** — Data layer (DAL, migrations, SQL)
 - **erganis-packages** — Shared libraries and tools

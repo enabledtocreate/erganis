@@ -25,9 +25,9 @@ docker-compose up -d
 echo "Waiting for services to start..."
 sleep 5
 
-# Run migrations
+# Run migrations (data layer lives in data/)
 echo "Running database migrations..."
-# Add migration commands here
+# e.g. (cd data && npm run migrate 2>/dev/null) || true
 
 # Install dependencies
 echo "Installing dependencies..."

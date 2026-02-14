@@ -2,19 +2,20 @@
 
 ## Summary
 
-- **Platform (one repo):** contracts, infrastructure, services, packages, scripts live in **erganis-platform**; use **relative paths** between folders. They evolve together.
+- **Platform (one repo):** contracts, **data** (DAL, migrations, SQL), **infrastructure** (Docker, deployment), services, packages, scripts live in **erganis-platform**; use **relative paths** between folders. They evolve together.
 - **Apps:** Depend only on the **API layer**. Consume via live URL (e.g. OpenAPI YAML/JSON) or generated client/SDK. No direct repo references to services or infrastructure.
 - **Packages:** Shared utilities; referenced via relative path when using full platform clone.
 
 ## How repos reference each other
 
-**Inside platform (one repo):** Use relative paths (e.g. `contracts/schemas/`, `../infrastructure/dal/`).
+**Inside platform (one repo):** Use relative paths (e.g. `contracts/schemas/`, `../data/dal/`, `../infrastructure/docker/`).
 
 | Repo / folder | Depends on | How |
 |---------------|------------|-----|
 | **platform/contracts** | — | Standalone |
-| **platform/infrastructure** | platform/contracts | Relative path |
-| **platform/services** | platform/contracts, platform/infrastructure, platform/packages | Relative paths |
+| **platform/data** | platform/contracts (optional) | Relative path |
+| **platform/infrastructure** | — | Docker, deployment only |
+| **platform/services** | platform/contracts, platform/data, platform/infrastructure, platform/packages | Relative paths |
 | **platform/packages** | platform/contracts (optional) | Relative path |
 | **studio-portal** (app repo) | API (from platform) | Live URL or generated SDK; no direct reference to platform repo |
 

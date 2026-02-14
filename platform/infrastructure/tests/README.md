@@ -1,9 +1,8 @@
 # Infrastructure tests
 
-Unit and in-repo integration tests for infrastructure (DAL, migrations, SQL).
+Tests for runtime and deployment (e.g. Docker image build, compose up, deployment scripts).
 
-- **DAL tests** — Mocked DB or test container.
-- **Migration tests** — Validate migration scripts (e.g. dry-run or against test DB).
+Data-layer tests (DAL, migrations, SQL) live in **`../data/tests/`**.
 
-Cross-repo integration (e.g. services + DAL + DB) lives in the **parent** repo: `erganis/tests/integration/`.  
-See [docs/TESTING.md](../../docs/TESTING.md) in the parent repo.
+Cross-repo integration lives in the **parent** repo: `erganis/tests/integration/`.  
+See [docs/TESTING.md](../../../docs/TESTING.md) in the parent repo.

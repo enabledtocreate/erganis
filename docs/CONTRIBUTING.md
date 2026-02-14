@@ -31,7 +31,7 @@ To add a new service to `erganis-services`:
 3. Add a README.md explaining what the service does
 4. Update `services/README.md` to list your service
 5. Ensure it uses contracts from `erganis-contracts`
-6. Use DAL from `erganis-infrastructure` for data access
+6. Use the data layer (DAL) from `platform/data/` for data access
 7. Add tests in `services/your-service-name/tests/`
 
 ## Code Style

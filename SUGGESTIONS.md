@@ -19,7 +19,7 @@
 
 ### 3. **Development Environment**
 **Issue:** No local dev setup  
-**Suggestion:** Add to `infrastructure/docker/`:
+**Suggestion:** Add to `platform/infrastructure/docker/` (or `infrastructure/docker/` when inside platform):
 - `docker-compose.yml` — Full stack for local development
 - `docker-compose.dev.yml` — Dev overrides
 - `Dockerfile.dev` — Development containers
@@ -28,7 +28,7 @@
 ### 4. **Environment Configuration**
 **Issue:** No env var templates  
 **Suggestion:** Add `.env.example` files in each repo:
-- `platform/contracts/.env.example`, `platform/services/.env.example`, `platform/infrastructure/.env.example`
+- `platform/contracts/.env.example`, `platform/data/.env.example`, `platform/services/.env.example`, `platform/infrastructure/.env.example`
 - `studio-portal/.env.example`
 - Document required vs optional vars
 

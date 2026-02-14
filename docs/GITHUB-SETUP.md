@@ -42,7 +42,7 @@ On [github.com/new](https://github.com/new), create under **enabledtocreate** (n
 
 | Repo name | Purpose |
 |-----------|---------|
-| `erganis-platform` | Contracts, infrastructure, services, packages, scripts (one repo) |
+| `erganis-platform` | Contracts, data (DAL/migrations/SQL), infrastructure (Docker/deploy), services, packages, scripts (one repo) |
 | `erganis-app-studio-portal` | Studio and client portal (one repo, two folders) |
 
 ---
@@ -63,13 +63,13 @@ If the repo already had a different structure, resolve any conflicts; the goal i
 
 ## 2. Push platform sub-repo
 
-The `platform/` folder contains contracts, infrastructure, services, packages, scripts. Push it as its own repo:
+The `platform/` folder contains contracts, data, infrastructure, services, packages, scripts. Push it as its own repo:
 
 ```bash
 cd erganis/platform
 git init
 git add .
-git commit -m "Initial platform (contracts, infrastructure, services, packages, scripts)"
+git commit -m "Initial platform (contracts, data, infrastructure, services, packages, scripts)"
 git remote add origin https://github.com/enabledtocreate/erganis-platform.git
 git branch -M main
 git push -u origin main

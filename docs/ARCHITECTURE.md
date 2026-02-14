@@ -11,7 +11,8 @@ One repo containing the **tightly coupled backend** (all of these are folders, n
 | Folder | Tier | Purpose |
 |--------|------|---------|
 | **contracts/** | Contracts | Schemas, core + public API, SDK generation |
-| **infrastructure/** | Data & Env | DAL, migrations, SQL, Docker, deployment |
+| **data/** | Data | DAL, migrations, SQL |
+| **infrastructure/** | Runtime & Deploy | Docker, deployment (IaC) |
 | **services/** | Application | API gateway, business logic, background jobs |
 | **packages/** | Shared | UI libs, logging, auth, utils |
 | **scripts/** | Tooling | Setup, deploy, dev, maintenance |
@@ -35,8 +36,9 @@ studio-portal (apps)
   ↓ Consumes API only (URL or SDK)
 platform/
   ├── contracts (API surface)
-  ├── services (business logic, uses DAL)
-  ├── infrastructure (DAL, migrations, Docker)
+  ├── data (DAL, migrations, SQL)
+  ├── infrastructure (Docker, deployment)
+  ├── services (business logic, uses data layer)
   ├── packages (shared libs)
   └── scripts (automation)
 ```

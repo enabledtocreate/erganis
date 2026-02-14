@@ -28,7 +28,8 @@ No separate `erganis-tests` repo. Unit/integration that touch only one repo live
 - `studio-portal/studio/tests/` or `studio-portal/studio/src/**/*.test.tsx` — Unit + component tests (and same for client-portal)
 - `platform/services/business-logic/tests/` — Unit + integration tests for that service
 - `platform/packages/ui/tests/` — Component/library tests
-- `platform/infrastructure/dal/tests/` — DAL unit tests (mocked DB or test container)
+- `platform/data/tests/` — Data layer tests (DAL, migrations, SQL; mocked DB or test container)
+- `platform/infrastructure/tests/` — Docker/deployment tests
 
 **Tooling:** Use the standard stack for that repo (e.g. Jest/Vitest for TS/JS, xUnit/NUnit for .NET, pytest for Python). No single tool across all repos.
 

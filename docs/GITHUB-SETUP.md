@@ -40,4 +40,4 @@ git submodule add https://github.com/enabledtocreate/erganis-companion.git compa
 git commit -m "Add submodules: core, studio, agora, companion"
 ```
 
-See [SUBMODULES.md](../SUBMODULES.md) for day-to-day submodule workflow.
+See [SUBMODULES.md](SUBMODULES.md) for day-to-day submodule workflow.

@@ -10,13 +10,16 @@
 ## Development
 
 - [DEPENDENCIES.md](DEPENDENCIES.md) — Repo references and API consumption
+- [SUBMODULES.md](SUBMODULES.md) — Submodule workflow (clone, push, add)
 - [TESTING.md](TESTING.md) — Testing strategy
 - [GITHUB-SETUP.md](GITHUB-SETUP.md) — GitHub repos and submodules
 - [CONTRIBUTING.md](CONTRIBUTING.md) — Contribution guidelines
 
-## Planning
+## Planning and governance
 
+- [SUGGESTIONS.md](SUGGESTIONS.md) — Structural improvement backlog
 - [brain-storming.md](brain-storming.md) — Original capture (see `.apm/_WORKSPACE/IDEAS.md` for current ideas)
+- [SECURITY.md](../SECURITY.md) — Security policy (root file; required by GitHub)
 
 ## Related
 

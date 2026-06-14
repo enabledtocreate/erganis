@@ -1,18 +1,16 @@
-# Create the two new Erganis sub-repos (erganis already exists). Run after: gh auth login
-# Requires: GitHub CLI (gh) - https://cli.github.com/
+# Create Erganis sub-repos. Run after: gh auth login
 
 $ErrorActionPreference = "Stop"
 $org = "enabledtocreate"
 
-# Sub-repos; parent erganis already exists
 $repos = @(
-    @{ Name = "erganis-platform"; Description = "Contracts, data, infrastructure, services, packages, scripts (one repo)" },
-    @{ Name = "erganis-app-studio-portal"; Description = "Studio and client portal apps (one repo, two folders)" },
-    @{ Name = "erganis-app-id-companion"; Description = "ID Companion mobile app" }
+    @{ Name = "erganis-core"; Description = "Core: contracts, data, infrastructure, services, packages, scripts" },
+    @{ Name = "erganis-studio"; Description = "Studio and client apps, modules" },
+    @{ Name = "erganis-agora"; Description = "Public vendor catalog: web, api, shared" },
+    @{ Name = "erganis-companion"; Description = "Companion mobile app" }
 )
 
-Write-Host "Creating sub-repos under GitHub account: $org (parent erganis already exists)" -ForegroundColor Cyan
-Write-Host ""
+Write-Host "Creating sub-repos under GitHub account: $org" -ForegroundColor Cyan
 
 foreach ($r in $repos) {
     $fullName = "$org/$($r.Name)"
@@ -31,4 +29,4 @@ foreach ($r in $repos) {
 }
 
 Write-Host ""
-Write-Host 'Done. Next: push your local content and add submodules (see docs/GITHUB-SETUP.md)' -ForegroundColor Cyan
+Write-Host "Done. Next: scripts/push-subrepos.ps1 and docs/GITHUB-SETUP.md" -ForegroundColor Cyan

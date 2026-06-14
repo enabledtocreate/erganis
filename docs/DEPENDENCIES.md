@@ -2,34 +2,39 @@
 
 ## Summary
 
-- **Platform (one repo):** contracts, **data** (DAL, migrations, SQL), **infrastructure** (Docker, deployment), services, packages, scripts live in **erganis-platform**; use **relative paths** between folders. They evolve together.
-- **Apps:** Depend only on the **API layer**. Consume via live URL (e.g. OpenAPI YAML/JSON) or generated client/SDK. No direct repo references to services or infrastructure.
-- **Packages:** Shared utilities; referenced via relative path when using full platform clone.
+- **Core (`erganis-core`):** contracts, data, infrastructure, services, packages, scripts — **relative paths** between folders.
+- **Studio, Agora, Companion:** depend on **API contracts / SDKs**, not direct Core repo paths (except monorepo dev with submodules).
+- **Agora API:** separate deploy; shares vendor schema shapes via Core contracts; sync jobs align data.
 
 ## How repos reference each other
 
-**Inside platform (one repo):** Use relative paths (e.g. `contracts/schemas/`, `../data/dal/`, `../infrastructure/docker/`).
+**Inside Core:**
 
-| Repo / folder | Depends on | How |
-|---------------|------------|-----|
-| **platform/contracts** | — | Standalone |
-| **platform/data** | platform/contracts (optional) | Relative path |
-| **platform/infrastructure** | — | Docker, deployment only |
-| **platform/services** | platform/contracts, platform/data, platform/infrastructure, platform/packages | Relative paths |
-| **platform/packages** | platform/contracts (optional) | Relative path |
-| **studio-portal** (app repo) | API (from platform) | Live URL or generated SDK; no direct reference to platform repo |
-| **id-companion** (app repo) | API (from platform) | Live URL or generated SDK; no direct reference to platform repo |
+| Folder | Depends on | How |
+|--------|------------|-----|
+| **contracts** | — | OpenAPI source; SDK output in `contracts/sdk/` |
+| **data** | contracts (optional) | Relative path |
+| **services** | contracts, data, packages | Relative paths; NestJS |
+| **packages** | contracts (optional) | Relative path |
+
+**App repos:**
+
+| Repo | Depends on | How |
+|------|------------|-----|
+| **studio** | Core API | Surface API URL or `@erganis/sdk` |
+| **agora** | Core contracts (types), Agora API | Shared schemas; web → agora/api |
+| **companion** | Core API | Public API URL or SDK subset |
 
 ## Cloning
 
-- **Full platform:** `git clone --recurse-submodules https://github.com/enabledtocreate/erganis.git` — you get parent + platform + studio-portal + id-companion.
-- **Platform only:** `git clone https://github.com/enabledtocreate/erganis-platform.git` — backend only; all platform folders use relative paths.
-- **App only:** `git clone https://github.com/enabledtocreate/erganis-app-studio-portal.git` or `erganis-app-id-companion.git` — apps consume API via URL or SDK.
+- **Full platform:** `git clone --recurse-submodules …/erganis.git`
+- **Core only:** `git clone …/erganis-core.git`
+- **Single app:** `erganis-studio`, `erganis-agora`, or `erganis-companion`
 
 ## API: internal vs public
 
-- **Core API** is defined in `platform/contracts/schemas/core/openapi.yaml` (or inside platform repo: `contracts/schemas/core/openapi.yaml`).
-- **Public API** is a generated subset (operations with `x-audience: public`) in `contracts/schemas/public/v1/`, `v2/`, etc.
-- Apps and third parties consume the API via URL or generated client; internal services use the full core.
+- **Core API:** `core/contracts/schemas/core/openapi.yaml`
+- **Public API:** generated subset in `schemas/public/v1/`, etc.
+- **Agora API:** separate OpenAPI in `agora/api/` extending Core vendor components
 
-See [platform/contracts/schemas/README.md](../platform/contracts/schemas/README.md) for generation and support policy.
+See [core/contracts/schemas/README.md](../core/contracts/schemas/README.md).

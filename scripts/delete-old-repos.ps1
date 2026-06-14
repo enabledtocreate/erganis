@@ -1,4 +1,4 @@
-# Permanently delete old Erganis repos (replaced by erganis-platform + erganis-app-studio-portal).
+# Permanently delete old Erganis repos (replaced by erganis-core, erganis-studio, erganis-agora, erganis-companion).
 # Requires: GitHub CLI (gh), logged in as enabledtocreate with delete_repo scope.
 # To grant scope: gh auth refresh -s delete_repo
 # Run from repo root. Does not touch enabledtocreate/erganis.

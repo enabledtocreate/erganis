@@ -1,18 +1,17 @@
 #!/usr/bin/env bash
-# Create the two new Erganis sub-repos (erganis already exists). Run after: gh auth login
-# Requires: GitHub CLI (gh) - https://cli.github.com/
+# Create Erganis sub-repos (parent erganis already exists). Run after: gh auth login
 
 set -e
 ORG="enabledtocreate"
 
-# Sub-repos; parent erganis already exists
 repos=(
-    "erganis-platform:Contracts, data, infrastructure, services, packages, scripts (one repo)"
-    "erganis-app-studio-portal:Studio and client portal apps (one repo, two folders)"
-    "erganis-app-id-companion:ID Companion mobile app"
+    "erganis-core:Core — contracts, data, infrastructure, services, packages, scripts"
+    "erganis-studio:Studio and client apps, modules"
+    "erganis-agora:Public vendor catalog — web, api, shared"
+    "erganis-companion:Companion mobile app"
 )
 
-echo "Creating sub-repos under GitHub account: $ORG (parent erganis already exists)"
+echo "Creating sub-repos under GitHub account: $ORG"
 echo ""
 
 for entry in "${repos[@]}"; do
@@ -33,4 +32,4 @@ for entry in "${repos[@]}"; do
 done
 
 echo ""
-echo "Done. Next: push your local content and add submodules (see docs/GITHUB-SETUP.md)"
+echo "Done. Next: push local content (scripts/push-subrepos.sh) and add submodules (docs/GITHUB-SETUP.md)"

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Archive old Erganis repos (replaced by erganis-platform + erganis-app-studio-portal).
+# Archive old Erganis repos (replaced by erganis-core, erganis-studio, erganis-agora, erganis-companion).
 # Requires: GitHub CLI (gh), logged in as enabledtocreate.
 # Run from repo root. Does not touch enabledtocreate/erganis.
 

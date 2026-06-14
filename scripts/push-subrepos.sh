@@ -1,29 +1,30 @@
 #!/usr/bin/env bash
-# Create erganis-platform, erganis-app-studio-portal, erganis-app-id-companion on GitHub (if missing),
-# then push the local platform/, studio-portal/, and id-companion/ folders to them.
-# Run from the erganis repo root. Requires: GitHub CLI (gh), git.
+# Create erganis sub-repos on GitHub (if missing), then push core/, studio/, agora/, companion/.
+# Run from erganis repo root. Requires: gh, git.
 
 set -e
 ORG="enabledtocreate"
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 
-if [ ! -d "$ROOT/platform" ] || [ ! -d "$ROOT/studio-portal" ] || [ ! -d "$ROOT/id-companion" ]; then
-  echo "Run this from the erganis repo root (parent of platform/, studio-portal/, id-companion/)."
-  exit 1
-fi
+for d in core studio agora companion; do
+  if [ ! -d "$ROOT/$d" ]; then
+    echo "Missing $ROOT/$d — run from erganis repo root."
+    exit 1
+  fi
+done
 
-# Ensure the repos exist on GitHub
-for name in erganis-platform erganis-app-studio-portal erganis-app-id-companion; do
+declare -A DESCS=(
+  [erganis-core]="Core — contracts, data, infrastructure, services, packages, scripts"
+  [erganis-studio]="Studio and client apps, modules"
+  [erganis-agora]="Public vendor catalog — web, api, shared"
+  [erganis-companion]="Companion mobile app"
+)
+
+for name in erganis-core erganis-studio erganis-agora erganis-companion; do
   full="$ORG/$name"
   if ! gh repo view "$full" &>/dev/null; then
     echo "Creating $full ..."
-    case "$name" in
-      erganis-platform) desc="Contracts, data, infrastructure, services, packages, scripts (one repo)" ;;
-      erganis-app-studio-portal) desc="Studio and client portal apps (one repo, two folders)" ;;
-      erganis-app-id-companion) desc="ID Companion mobile app" ;;
-      *) desc="" ;;
-    esac
-    gh repo create "$full" --public --description "$desc"
+    gh repo create "$full" --public --description "${DESCS[$name]}"
   fi
 done
 
@@ -41,17 +42,10 @@ push_subrepo() {
 }
 
 echo ""
-echo "Pushing platform/ to $ORG/erganis-platform ..."
-push_subrepo "platform" "erganis-platform" "Initial platform (contracts, infrastructure, services, packages, scripts)"
+push_subrepo "core" "erganis-core" "Initial Core (contracts, data, services, packages, scripts)"
+push_subrepo "studio" "erganis-studio" "Initial Studio (apps/studio, apps/client, modules)"
+push_subrepo "agora" "erganis-agora" "Initial Erganis Agora (web, api, shared)"
+push_subrepo "companion" "erganis-companion" "Initial Companion mobile app"
 
 echo ""
-echo "Pushing studio-portal/ to $ORG/erganis-app-studio-portal ..."
-push_subrepo "studio-portal" "erganis-app-studio-portal" "Initial studio and client portal"
-
-echo ""
-echo "Pushing id-companion/ to $ORG/erganis-app-id-companion ..."
-push_subrepo "id-companion" "erganis-app-id-companion" "Initial ID Companion mobile app"
-
-echo ""
-echo "Done. You should now see erganis-platform, erganis-app-studio-portal, and erganis-app-id-companion on GitHub."
-echo "To switch the parent to submodules: see docs/GITHUB-SETUP.md section 5."
+echo "Done. See docs/GITHUB-SETUP.md for submodules."

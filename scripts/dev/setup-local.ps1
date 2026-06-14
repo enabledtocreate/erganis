@@ -1,49 +1,39 @@
-# One-command local development setup. Run from erganis (parent) repo root.
+# Local development setup. Run from erganis (parent) repo root.
+# PostgreSQL: Docker optional OR native install on Windows/Linux.
 
 $ErrorActionPreference = "Stop"
 
-Write-Host "Setting up Erganis local development environment..." -ForegroundColor Cyan
+Write-Host "Setting up Erganis Platform local development..." -ForegroundColor Cyan
 
-if (-not (Get-Command docker -ErrorAction SilentlyContinue)) {
-    Write-Host "Docker is required but not installed. Aborting." -ForegroundColor Red
-    exit 1
-}
-
-# Optional: init submodules
 if (Test-Path ".git") {
     if (Test-Path ".gitmodules") {
-        if (-not (Test-Path "platform/contracts/schemas")) {
+        if (-not (Test-Path "core/contracts/schemas")) {
             Write-Host "Initializing submodules..."
             git submodule update --init --recursive
         }
     }
 }
 
-# Start infrastructure
-$composeFile = "platform/infrastructure/docker/docker-compose.yml"
-if (-not (Test-Path $composeFile)) {
-    Write-Host "Not found: $composeFile. Run from erganis repo root." -ForegroundColor Red
-    exit 1
+$composeFile = "core/infrastructure/docker/docker-compose.yml"
+if ((Get-Command docker -ErrorAction SilentlyContinue) -and (Test-Path $composeFile)) {
+    Write-Host "Starting PostgreSQL via Docker (optional)..."
+    docker compose -f $composeFile up -d postgres
+    Start-Sleep -Seconds 3
+} else {
+    Write-Host "Docker not used — ensure PostgreSQL is running locally."
 }
-Write-Host "Starting infrastructure services..."
-docker compose -f $composeFile up -d
 
-Write-Host "Waiting for services to start..."
-Start-Sleep -Seconds 5
-
-# Install dependencies
-@("platform/contracts", "platform/services", "platform/packages", "studio-portal", "id-companion") | ForEach-Object {
+@("core/contracts", "core/services", "core/packages", "studio", "companion") | ForEach-Object {
     if (Test-Path "$_/package.json") {
         Write-Host "Installing dependencies in $_..."
-        Set-Location $_
+        Push-Location $_
         npm install
-        Set-Location ../..
+        Pop-Location
     }
 }
 
 Write-Host ""
 Write-Host "Setup complete." -ForegroundColor Green
-Write-Host "  - Postgres: localhost:5432 (user erganis, password dev_password, db erganis)"
-Write-Host "  - Redis: localhost:6379"
-Write-Host "  - Copy .env.example to .env in platform/ or studio-portal/ if needed."
-Write-Host "  - Run 'npm run dev' in studio-portal/ or platform/services/ to start development."
+Write-Host "  - Core Postgres: localhost:5432 (db erganis)"
+Write-Host "  - Agora Postgres: agora/api/.env (db erganis_agora)"
+Write-Host "  - Jobs: pg-boss (PostgreSQL); Redis not required for v1."

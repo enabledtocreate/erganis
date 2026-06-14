@@ -15,12 +15,12 @@ Thank you for your interest in contributing to Erganis!
 
 ## Adding a New App
 
-Apps are separate repos (e.g. `erganis-app-studio-portal`, `erganis-app-id-companion`). To add another app:
+Apps are separate repos (`erganis-studio`, `erganis-agora`, `erganis-companion`). To add another app:
 
-1. Create a new repo (e.g. `erganis-app-mobile`) and add it as a submodule under `erganis/` (e.g. `mobile-app/`).
-2. Or add a new folder to an existing app repo (e.g. add a third app to `studio-portal/` if it shares code).
-3. Ensure the app consumes the API via platform (live URL or generated SDK).
-4. Add tests per repo (see `docs/TESTING.md`). Platform tests live inside `platform/` (e.g. `platform/contracts/tests/`).
+1. Create a new repo (e.g. `erganis-<app>`) and add it as a submodule under `erganis/`.
+2. Or add a module to `studio/modules/` or an app under `studio/apps/`.
+3. Ensure the app consumes the API via Core (live URL or generated SDK).
+4. Add tests per repo (see `docs/TESTING.md`). Core tests live inside `core/` (e.g. `core/contracts/tests/`).
 
 ## Adding a New Service
 
@@ -31,7 +31,7 @@ To add a new service to `erganis-services`:
 3. Add a README.md explaining what the service does
 4. Update `services/README.md` to list your service
 5. Ensure it uses contracts from `erganis-contracts`
-6. Use the data layer (DAL) from `platform/data/` for data access
+6. Use the data layer (DAL) from `core/data/` for data access
 7. Add tests in `services/your-service-name/tests/`
 
 ## Code Style

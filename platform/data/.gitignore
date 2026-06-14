@@ -1,8 +1,0 @@
-# Local DB files
-*.db
-*.sqlite
-*.mdf
-*.ldf
-
-.env
-.env.local

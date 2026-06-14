@@ -1,33 +1,37 @@
-# Create erganis-platform, erganis-app-studio-portal, erganis-app-id-companion on GitHub (if missing),
-# then push the local platform/, studio-portal/, and id-companion/ folders to them.
-# Run from the erganis repo root. Requires: GitHub CLI (gh), git.
+# Push core/, studio/, agora/, companion/ to GitHub sub-repos.
+# Run from erganis repo root. Requires: gh, git.
 
 $ErrorActionPreference = "Stop"
 $org = "enabledtocreate"
 $root = Split-Path -Parent $PSScriptRoot
-if (-not (Test-Path "$root\platform") -or -not (Test-Path "$root\studio-portal") -or -not (Test-Path "$root\id-companion")) {
-    Write-Host "Run this from the erganis repo root (parent of platform/, studio-portal/, id-companion/)." -ForegroundColor Red
-    exit 1
+
+foreach ($d in @("core", "studio", "agora", "companion")) {
+    if (-not (Test-Path "$root\$d")) {
+        Write-Host "Missing $root\$d - run from erganis repo root." -ForegroundColor Red
+        exit 1
+    }
 }
 
-# Create the repos on GitHub if they don't exist (gh repo create skips if exists)
-Write-Host "Ensuring erganis-platform, erganis-app-studio-portal, erganis-app-id-companion exist on GitHub ..." -ForegroundColor Cyan
 $repos = @(
-    @{ name = "erganis-platform"; desc = "Contracts, data, infrastructure, services, packages, scripts (one repo)" },
-    @{ name = "erganis-app-studio-portal"; desc = "Studio and client portal apps (one repo, two folders)" },
-    @{ name = "erganis-app-id-companion"; desc = "ID Companion mobile app" }
+    @{ name = "erganis-core"; desc = "Core: contracts, data, infrastructure, services, packages, scripts" },
+    @{ name = "erganis-studio"; desc = "Studio and client apps, modules" },
+    @{ name = "erganis-agora"; desc = "Public vendor catalog: web, api, shared" },
+    @{ name = "erganis-companion"; desc = "Companion mobile app" }
 )
+
 foreach ($r in $repos) {
     $full = "$org/$($r.name)"
-    Write-Host "  $full ..." -NoNewline
-    try { $null = & gh repo create $full --public --description $r.desc 2>&1; if ($LASTEXITCODE -eq 0) { Write-Host " created" -ForegroundColor Green } else { Write-Host " (exists)" -ForegroundColor Yellow } } catch { Write-Host " (exists)" -ForegroundColor Yellow }
+    Write-Host "Ensuring $full ..." -NoNewline
+    try {
+        $null = gh repo create $full --public --description $r.desc 2>&1
+        if ($LASTEXITCODE -eq 0) { Write-Host " created" -ForegroundColor Green } else { Write-Host " (exists)" -ForegroundColor Yellow }
+    } catch { Write-Host " (exists)" -ForegroundColor Yellow }
 }
 
 function Push-Subrepo {
     param([string]$dir, [string]$repoName, [string]$commitMsg)
     $path = Join-Path $root $dir
-    $gitDir = Join-Path $path ".git"
-    if (Test-Path $gitDir) {
+    if (Test-Path (Join-Path $path ".git")) {
         Push-Location $path
         try {
             git remote get-url origin 2>$null
@@ -48,18 +52,9 @@ function Push-Subrepo {
     } finally { Pop-Location }
 }
 
-Write-Host ""
-Write-Host "Pushing platform/ to $org/erganis-platform ..." -ForegroundColor Cyan
-Push-Subrepo -dir "platform" -repoName "erganis-platform" -commitMsg "Initial platform (contracts, infrastructure, services, packages, scripts)"
+Push-Subrepo -dir "core" -repoName "erganis-core" -commitMsg "Initial Core"
+Push-Subrepo -dir "studio" -repoName "erganis-studio" -commitMsg "Initial Studio"
+Push-Subrepo -dir "agora" -repoName "erganis-agora" -commitMsg "Initial Erganis Agora"
+Push-Subrepo -dir "companion" -repoName "erganis-companion" -commitMsg "Initial Companion"
 
-Write-Host ""
-Write-Host "Pushing studio-portal/ to $org/erganis-app-studio-portal ..." -ForegroundColor Cyan
-Push-Subrepo -dir "studio-portal" -repoName "erganis-app-studio-portal" -commitMsg "Initial studio and client portal"
-
-Write-Host ""
-Write-Host "Pushing id-companion/ to $org/erganis-app-id-companion ..." -ForegroundColor Cyan
-Push-Subrepo -dir "id-companion" -repoName "erganis-app-id-companion" -commitMsg "Initial ID Companion mobile app"
-
-Write-Host ""
-Write-Host "Done. You should now see erganis-platform, erganis-app-studio-portal, and erganis-app-id-companion on GitHub." -ForegroundColor Green
-Write-Host "To switch the parent to submodules: see docs/GITHUB-SETUP.md section 5." -ForegroundColor Cyan
+Write-Host "Done. See docs/GITHUB-SETUP.md" -ForegroundColor Green

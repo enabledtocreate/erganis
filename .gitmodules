@@ -1,0 +1,12 @@
+[submodule "core"]
+	path = core
+	url = https://github.com/enabledtocreate/erganis-core.git
+[submodule "studio"]
+	path = studio
+	url = https://github.com/enabledtocreate/erganis-studio.git
+[submodule "agora"]
+	path = agora
+	url = https://github.com/enabledtocreate/erganis-agora.git
+[submodule "companion"]
+	path = companion
+	url = https://github.com/enabledtocreate/erganis-companion.git

@@ -5,7 +5,7 @@
 ### 1. **Testing Structure** *(Recommended approach in docs/TESTING.md)*
 **Issue:** No clear place for tests  
 **Cleanest solution:**
-- **Unit + in-repo integration:** In each repo (`studio-portal/studio/tests/`, `id-companion/app/tests/`, `platform/services/*/tests/`, etc.) with that repo’s tooling (Jest, xUnit, pytest).
+- **Unit + in-repo integration:** In each repo (`studio/apps/studio/tests/`, `companion/app/tests/`, `core/services/*/tests/`, etc.)
 - **Cross-repo integration + E2E:** In the **parent repo only** under `tests/integration/` and `tests/e2e/`. Run when full platform is checked out (submodules). No separate `erganis-tests` repo.
 - See [docs/TESTING.md](docs/TESTING.md) for full strategy.
 
@@ -19,7 +19,7 @@
 
 ### 3. **Development Environment**
 **Issue:** No local dev setup  
-**Suggestion:** Add to `platform/infrastructure/docker/` (or `infrastructure/docker/` when inside platform):
+**Suggestion:** Add to `core/infrastructure/docker/`:
 - `docker-compose.yml` — Full stack for local development
 - `docker-compose.dev.yml` — Dev overrides
 - `Dockerfile.dev` — Development containers
@@ -28,8 +28,8 @@
 ### 4. **Environment Configuration**
 **Issue:** No env var templates  
 **Suggestion:** Add `.env.example` files in each repo:
-- `platform/contracts/.env.example`, `platform/data/.env.example`, `platform/services/.env.example`, `platform/infrastructure/.env.example`
-- `studio-portal/.env.example`, `id-companion/.env.example`
+- `core/contracts/.env.example`, `core/data/.env.example`, `core/services/.env.example`, `core/infrastructure/.env.example`
+- `studio/.env.example`, `agora/.env.example`, `companion/.env.example`
 - Document required vs optional vars
 
 ### 5. **License File**

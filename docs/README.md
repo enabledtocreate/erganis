@@ -1,17 +1,24 @@
-# Erganis Documentation
+# Erganis Platform Documentation
 
-Documentation for the Erganis platform.
+## Architecture and stack
 
-## Contents
+- [ARCHITECTURE.md](ARCHITECTURE.md) — Four sub-repos and data flow
+- [erganis_architecture_spec.md](erganis_architecture_spec.md) — Full architecture specification (v27)
+- [STACK.md](STACK.md) — Technology stack table, flowchart, Nest scaffold plan
+- [adr/001-operation-envelope.md](adr/001-operation-envelope.md) — Operation envelope and module interaction
 
-- [ARCHITECTURE.md](ARCHITECTURE.md) — Architecture overview and tier structure
-- [DEPENDENCIES.md](DEPENDENCIES.md) — How repos reference each other (relative paths, API consumption)
-- [TESTING.md](TESTING.md) — Testing strategy (unit per repo, integration/E2E in parent)
-- [GITHUB-SETUP.md](GITHUB-SETUP.md) — How to create GitHub repos and set up submodules
-- [INSTALLATION.md](INSTALLATION.md) — Installation and setup guide (to be created)
+## Development
+
+- [DEPENDENCIES.md](DEPENDENCIES.md) — Repo references and API consumption
+- [TESTING.md](TESTING.md) — Testing strategy
+- [GITHUB-SETUP.md](GITHUB-SETUP.md) — GitHub repos and submodules
 - [CONTRIBUTING.md](CONTRIBUTING.md) — Contribution guidelines
+
+## Planning
+
+- [brain-storming.md](brain-storming.md) — Original capture (see `.apm/_WORKSPACE/IDEAS.md` for current ideas)
 
 ## Related
 
-- Parent repo: [erganis](https://github.com/enabledtocreate/erganis)
-- See parent [README](https://github.com/enabledtocreate/erganis#readme) for the full list of sub-repos.
+- Parent: [erganis](https://github.com/enabledtocreate/erganis)
+- Sub-repos: `erganis-core`, `erganis-studio`, `erganis-agora`, `erganis-companion`

@@ -68,7 +68,7 @@ The parent also holds [.github](.github/) (CI/CD), [docs](docs/), [tests](tests/
 └──────────────────────────────────────────────────┘
 ```
 
-See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) and [docs/STACK.md](docs/STACK.md).
+See [docs/erganis-product-plan.md](docs/erganis-product-plan.md).
 
 ## GitHub organization
 

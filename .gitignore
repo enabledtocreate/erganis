@@ -13,3 +13,6 @@ Thumbs.db
 .env
 .env.local
 *.local
+
+# APM workspace scratch (local only; APM may opt-in to commit per project)
+.apm/_WORKSPACE/

@@ -1,11 +1,8 @@
 # Erganis Platform Documentation
 
-## Architecture and stack
+## Product planning
 
-- [ARCHITECTURE.md](ARCHITECTURE.md) — Four sub-repos and data flow
-- [erganis_architecture_spec.md](erganis_architecture_spec.md) — Full architecture specification (v27)
-- [STACK.md](STACK.md) — Technology stack table, flowchart, Nest scaffold plan
-- [adr/001-operation-envelope.md](adr/001-operation-envelope.md) — Operation envelope and module interaction
+- [erganis-product-plan.md](erganis-product-plan.md) — **Primary planning document** (vision, architecture, stack, modules, backlog, open questions)
 
 ## Development
 
@@ -17,8 +14,7 @@
 
 ## Planning and governance
 
-- [SUGGESTIONS.md](SUGGESTIONS.md) — Structural improvement backlog
-- [brain-storming.md](brain-storming.md) — Original capture (see `.apm/_WORKSPACE/IDEAS.md` for current ideas)
+- [SUGGESTIONS.md](SUGGESTIONS.md) — Structural improvement backlog (build/process)
 - [SECURITY.md](../SECURITY.md) — Security policy (root file; required by GitHub)
 
 ## Related

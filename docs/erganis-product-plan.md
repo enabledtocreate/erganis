@@ -413,7 +413,7 @@ First-party modules live primarily in `studio/modules/`. **Exception:** Agora or
 | **Notes** | studio | Meeting notes, client context, dictation, Zoom/Meet (TBD) |
 | **Design** | studio | **Creativity workspace** — concepts, exploration, room compare; feeds **Presentations** |
 | **Presentations** | studio | Shareable outputs (client proposals, approvals, comments); may use Design assets; not limited to client-only use cases |
-| **Build** | studio | Drawings, MEP, **light schedules** (e.g. plumbing schedules); **drawing approval workflow** (uses Core roles/users) |
+| **Build** | studio | Drawings, MEP, **light schedules**, **IBC room planner**, **Tags** on drawing sets (optional **Inventory** links); **drawing approval workflow** (uses Core roles/users) |
 | **Business** | studio | Running the firm — **billing, taxes**, operational finance |
 | **Reports** | studio | Cross-module analytics; modules **register data emissions** for Reports to consume |
 | **Agora (org module)** | **agora** | Org-scoped vendors, trade tracking, sync with public Agora catalog |
@@ -443,6 +443,7 @@ First-party modules live primarily in `studio/modules/`. **Exception:** Agora or
 
 - Product/material lifecycle.
 - **Shipment tracking** (carrier links, aggregator APIs — UPS, FedEx, USPS, AfterShip, etc.) lives here, not a separate module.
+- Optional cross-link: products referenced by **Build** drawing-set **Tags** (see [Build](#build)).
 
 ### Notes vs Documents (separate modules)
 
@@ -465,8 +466,12 @@ Design is the **creativity area**; Presentations **uses** Design assets when bui
 ### Build
 
 - Drawings, MEP, **light schedules** (plumbing schedules, etc.).
+- **IBC room-size / occupancy planner** — sq ft, furniture, occupancy rules (International Building Code); architect/build workflows.
+- **Tags on drawing sets** — label and identify items on plans/elevations/schedules. Drawing sets often specify products **not** in **Inventory**; tags should work standalone *or* **pull from Inventory** and link tagged items to `productPublicId` when a match exists. Goal: clearer drawing sets and smoother **install days** (field teams see what/where without reconciling paper vs spreadsheet).
 - **Drawing approval** workflow owned here — uses **Core users & roles** for approvers; orchestrator + operation envelope for sign-off steps.
 - Heavy drawing *viewers* remain Experience-layer (Studio); files in Core FileStore.
+
+**Build ↔ Inventory:** Tag-to-product links use Public IDs and orchestrator/contracts — Build does not write Inventory tables directly. Inventory may surface “where used on drawings” via registered references.
 
 ### Business vs Reports (separate modules)
 
@@ -485,9 +490,9 @@ Modules that want Reports access expose data via a **registration/emission contr
 - Org vendor list, trade account status, background match to public catalog.
 - Co-located with Agora public site; sync jobs between Agora API DB and Core.
 
-### Room size planner (ex-"Tools" module)
+### IBC room-size planner (decided)
 
-Earlier planning suggested a standalone **Tools** module for an IBC room-size / occupancy planner. **No separate Tools module for now** — treat as a **Design** capability (or Build-adjacent tool) when specced. "Tools vs Design/Build" was only about *where that one feature lands*.
+Earlier planning considered a standalone **Tools** module. **Decided:** IBC room-size / occupancy planning lives in the **Build** module (code compliance and architect workflows), not Design.
 
 ### Project features (still TBD)
 
@@ -908,7 +913,6 @@ User → Surface → Operation envelope → Orchestrator (lock) → Module steps
 ### Design
 - [ ] Creativity workspace — concepts, exploration
 - [ ] Room side-by-side compare (candidate)
-- [ ] Room size / IBC planner (candidate — was "Tools" idea)
 
 ### Presentations
 - [ ] Shareable proposals, comments, item approval
@@ -917,6 +921,8 @@ User → Surface → Operation envelope → Orchestrator (lock) → Module steps
 
 ### Build
 - [ ] Drawings, MEP, light schedules (plumbing schedules, etc.)
+- [ ] IBC room-size / occupancy planner
+- [ ] **Tags** on drawing sets — standalone labels or linked to Inventory products; install-day clarity
 - [ ] Drawing approval pipeline (Core roles for approvers)
 
 ### Business
@@ -982,7 +988,7 @@ User → Surface → Operation envelope → Orchestrator (lock) → Module steps
 | Inventory scope | Includes shipment tracking |
 | Business vs Reports | Separate modules; Reports consumes registered data emissions |
 | Design vs Presentations | Separate; Design = creativity, Presentations = shareable outputs |
-| Build scope | Drawings, MEP, light schedules, drawing approval workflow |
+| Build scope | Drawings, MEP, light schedules, **IBC room planner**, **drawing-set Tags** (optional Inventory links), drawing approval workflow |
 | Users & roles | Owned by **Core**; modules reference by Public ID |
 | Dashboard shell | Core composition framework; module widgets; joined data via Reports |
 | Nest + Next split | Nest = Core/server/modules; Next = web UI (shadcn); not dual business logic |
@@ -1016,7 +1022,7 @@ User → Surface → Operation envelope → Orchestrator (lock) → Module steps
 | 13 | Room side-by-side compare | **Partial** — likely Design |
 | 14 | Day Tracker / Tasks placement | **Answered** — Planner › Tasks |
 | 15 | Erganis Planner naming | **Open** — "Planner" working name |
-| 16 | Room size / IBC planner ("Tools") | **Open** — likely Design capability |
+| 16 | Room size / IBC planner | **Answered** — Build module |
 | 17 | Erganis Reports vs Business | **Answered** — separate modules |
 | 18 | Drawing approval ownership | **Answered** — Build module + Core roles |
 | 19 | External app auth — OAuth, API keys, session delegation? | **Open** |
@@ -1160,3 +1166,5 @@ Candidates to validate loader + envelope + one Surface end-to-end:
 | 2025-06 | Module catalog reshuffle: Planner+Tasks+Calendar, Communications, Inventory+tracking, Business/Reports split, Agora module in `agora/` |
 | 2025-06 | Users/roles in Core; Build owns drawing approval; read vs write API policy |
 | 2025-06 | Core design workshop backlog captured in §20 |
+| 2025-06 | IBC room-size / occupancy planner in **Build** module |
+| 2025-06 | Build **Tags** on drawing sets; optional Inventory links for install-day workflows |

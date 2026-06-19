@@ -38,6 +38,19 @@
 
 Consolidates early brainstorming, architecture notes, stack decisions, module ideas, and backlog items into one plan for design work. **Temporary** — content will migrate to APM-managed artifacts via templates in `.apm/templates/`.
 
+### Feature prioritization (how to read this plan)
+
+**Rank implementation iterations by biggest user needs** — not by technical convenience or module order.
+
+When phasing work (v1 / v2 / later, or sprint slices):
+
+1. **User need** — Does this unblock daily designer/firm work? (offline Studio, client proposals, inventory selections, etc.)
+2. **Reach** — How many personas and workflows does it touch?
+3. **Risk reduction** — Does it validate Core contracts (envelope, sync, modules) early?
+4. **Dependency** — What must exist first?
+
+Module backlogs in [§17](#17-feature-backlog) and phased catalogs (e.g. [Design](#design)) are **ideas captured in full**; **delivery order** should be re-sorted against user-need ranking before each planning cycle. APM / PRD fragments should record the ranked iteration when promoted.
+
 ### APM workspace rules
 
 | Rule | Detail |
@@ -80,7 +93,7 @@ AI and contributors should **not** hand-edit APM-generated documents (`docs/ARCH
 - **Modules** — pluggable domain logic and data ownership
 - **Orchestration** — coordinates multi-module execution into one operation
 
-**Philosophy:** Contracts over implementation; composition over coupling; workflow-first; stable public IDs; Core builds any Erganis application.
+**Philosophy:** Contracts over implementation; composition over coupling; workflow-first; stable public IDs; Core builds any Erganis application. **Designers must not be blocked by server outages** — Studio desktop carries a local replica with sync and conflict resolution ([§7](#7-studio)).
 
 **Long-term goal:** First-party modules, third-party modules, internal apps, and external apps share the same contracts and orchestration principles.
 
@@ -92,7 +105,7 @@ AI and contributors should **not** hand-edit APM-generated documents (`docs/ARCH
 |------|---------|
 | **Erganis Platform** | The whole ecosystem |
 | **Core** | Base runtime (`core/`, `erganis-core`) |
-| **Studio** | Designer + client apps + modules (`studio/`) |
+| **Studio** | Designer + client apps + modules (`studio/`) — **web and desktop** |
 | **Erganis Agora** | Public vendor website + global catalog |
 | **Agora org module** | Org-scoped vendors + trade tracking (lives in `agora/modules/`) |
 | **Companion** | Mobile app (`companion/`) |
@@ -313,12 +326,61 @@ The platform lives or dies on Core. See **[§20 — Core design (high priority)]
 
 ```
 studio/
-├── apps/studio/           # Designer application
-├── apps/client/           # Client portal
+├── apps/studio/           # Designer application (web + desktop shell)
+├── apps/client/           # Client portal (web)
 ├── modules/               # First-party plugins
 ├── modules/third-party/   # External modules
-└── shared/                # shadcn/ui + Tailwind, API clients
+└── shared/                # shadcn/ui + Tailwind, API clients, sync layer
 ```
+
+### Studio desktop + web (same build)
+
+Interior designers must **not be blocked when servers are down**. Studio ships as **web** and **desktop** from the **same codebase** — one UI build (`studio/shared` + `apps/studio`), two shells (browser vs desktop host).
+
+| Surface | Role |
+|---------|------|
+| **Web** | Connected-first; talks to Core Surface API |
+| **Desktop** | **Local replica** of org/project data the user needs offline; **syncs to Core** when online |
+
+**Principles:**
+
+- **One build** — No forked desktop UI; desktop wraps or hosts the same Next/React app as web (shell TBD: e.g. Electron/Tauri — [§19](#19-open-questions)).
+- **Offline-capable** — Read/write against local store while disconnected; queue mutations for upload.
+- **Sync to server** — Desktop pushes local changes to Core when connectivity returns; pulls remote changes from Core.
+- **Conflict resolution** — Required when **two writers touch the same entry** (e.g. designer offline on desktop + colleague online on web, or two devices). Must detect concurrent edits (entity version / vector clock / operation log — design in [§20](#20-core-design--needing-to-discuss-high-priority)).
+  - Surface conflicts to the user with **compare + resolve** (keep mine, keep theirs, merge fields) — not silent last-write-wins for workflow-critical entities.
+  - Align with Core **workflow locks** and operation envelope **expectedVersion** where possible.
+- **Scope** — Designer **Studio** app is the primary offline target; Client portal and Companion remain online-first unless ranked later.
+
+```mermaid
+flowchart LR
+    subgraph Desktop
+        StudioUI[Same Studio UI build]
+        LocalDB[(Local replica)]
+        SyncQueue[Sync queue]
+    end
+    subgraph Online
+        CoreAPI[Core Surface API]
+        CoreDB[(Core PostgreSQL)]
+    end
+    StudioUI --> LocalDB
+    StudioUI --> SyncQueue
+    SyncQueue <-->|sync + conflict resolve| CoreAPI
+    CoreAPI --> CoreDB
+```
+
+### External tools & export (Excel, Pinterest, Instagram, etc.)
+
+Many firms still use **Excel**, **Instagram**, **Pinterest**, and similar tools. Erganis should **meet designers where they are** — not force an all-or-nothing migration.
+
+| Pattern | Examples | Notes |
+|---------|----------|-------|
+| **Export** | FF&E / selections → Excel, CSV; mood boards → image/PDF; schedules → spreadsheet | High priority for adoption; lowers switching cost |
+| **Import** | Excel product lists, pasted schedules, CSV room lists | Validate + map into Inventory / Design / Planner |
+| **Connect** | Pinterest boards, Instagram references, Google/Microsoft where APIs allow | OAuth or link/embed; respect platform ToS and API limits |
+| **Bridge** | Copy link, embed preview, “open in Erganis” from imported reference | When full API sync is impractical |
+
+Module owners declare what they export/import (manifest TBD). **Design** (reference imagery, mood boards) and **Inventory** (lists, alternatives) are likely first export targets.
 
 ### Studio + Client shared database
 
@@ -420,7 +482,7 @@ First-party modules live primarily in `studio/modules/`. **Exception:** Agora or
 | **Inventory** | studio | Products/materials; **alternatives** for client selections; **shipment tracking**; composable into Presentations |
 | **Documents** | studio | Formal file vault — certs, trade docs, attachments; **not** meeting notes |
 | **Notes** | studio | Meeting notes, client context, dictation, Zoom/Meet (TBD) |
-| **Design** | studio | **Creativity workspace** — concepts, **adjacency diagrams**, room compare; feeds **Presentations** |
+| **Design** | studio | **Creativity workspace** — spatial/concept exploration, palettes, FF&E intent, adjacency diagrams, room compare; feeds **Presentations** (see [Design catalog](#design)) |
 | **Presentations** | studio | **Customizable client proposals** (approvals, tax options); shareable outputs; embeds Inventory/Design via Core composition classes |
 | **Build** | studio | Drawings, MEP, **light schedules**, **IBC room planner**, **Tags** on drawing sets (optional **Inventory** links); **drawing approval workflow** (uses Core roles/users) |
 | **Business** | studio | Firm operations — **billing, taxes**, **cost verification** |
@@ -458,9 +520,134 @@ First-party modules live primarily in `studio/modules/`. **Exception:** Agora or
 
 ### Design
 
-- **Creativity workspace** — concepts, exploration, mood boards, room compare.
-- **Adjacency diagrams** — spatial relationship diagrams (rooms, zones, circulation); design-phase artifact; may feed Presentations or Build references.
-- Feeds **Presentations** with creative assets; distinct from client-facing proposal assembly.
+**Boundary:** Design = **creative exploration and design intent** (internal design team, iterative). Design **produces assets and intent** that other modules reference or embed.
+
+| Not Design | Module |
+|------------|--------|
+| Client delivery, approvals, tax options | **Presentations** |
+| Products, SKUs, alternatives, pricing | **Inventory** |
+| Cost / margin verification | **Business** |
+| Construction drawings, MEP, IBC, drawing tags | **Build** |
+| Formal vault files | **Documents** |
+| Meeting notes | **Notes** |
+| Schedule, Tasks, Gantt | **Planner** |
+
+Feeds **Presentations** via Core **composition classes**; links to **Inventory** (product refs), **Build** (spatial intent), **Documents**, **Notes**, **Planner** (design milestones as metadata).
+
+#### Phased roadmap
+
+| Phase | Focus |
+|-------|--------|
+| **v1** | Spaces, adjacency/circulation, mood boards & palettes, room compare, concepts & iterations, FF&E/finish intent, Presentations export hooks |
+| **v2** | Design layouts/blocking, option studies, elevations & vignettes, decisions log, client preference capture (exploration), firm design library |
+| **Later** | Render management, kit-of-parts templates, internal design sign-off, sustainability/accessibility intent, typical details library |
+
+#### 1. Project & space structure
+
+| Item | Phase | Notes |
+|------|-------|-------|
+| Design project / phase (concept, schematic, DD, etc.) | v1 | Design lens; schedule lives in **Planner** |
+| Spaces / rooms (type, level, area, program) | v1 | Core spatial unit for Design |
+| Zones & groupings | v1 | Kitchen zone, public vs private, suites |
+| Space program | v2 | Required functions, min sizes, occupancy intent |
+| **Adjacency diagrams** | v1 | Bubble / relationship diagrams |
+| Circulation diagrams | v1 | Flow paths, entry sequences |
+| Zoning diagrams | v2 | Functional zones on plan sketches |
+| Level / stack diagrams | v2 | Multi-floor relationships |
+
+#### 2. Concept & direction
+
+| Item | Phase | Notes |
+|------|-------|-------|
+| Design concepts (named directions) | v1 | e.g. "Coastal Modern", "Warm Minimal" |
+| Concept boards / mood boards | v1 | Visual direction collections |
+| Style guides | v2 | Typography, tone, material language |
+| Design narratives | v2 | Written concept statements |
+| Reference imagery | v1 | Inspiration photos, links, pins |
+| Design iterations / versions | v1 | v1, v2, rejected vs active |
+| Option studies | v2 | Side-by-side options (not priced client packages) |
+
+#### 3. Spatial layout (design-phase, not construction CAD)
+
+| Item | Phase | Notes |
+|------|-------|-------|
+| Space plans (design) | v2 | Furniture layout sketches, loose planning |
+| **Room side-by-side compare** | v1 | Compare layouts/options for one room |
+| Furniture blocking | v2 | Placement intent without full FF&E spec |
+| Clearance / ergonomics notes | Later | Design intent; code math → **Build** IBC |
+| Sight lines / focal points | v2 | What you see from where |
+| Key dimensions | v2 | Design-critical dims, not construction dims |
+
+#### 4. Color, materials & finishes (design intent)
+
+| Item | Phase | Notes |
+|------|-------|-------|
+| Color palettes | v1 | Room or project palettes |
+| Color schemes | v1 | **Presentations** delivers to clients |
+| Material palettes | v1 | Stone, wood, metal, fabric families |
+| Finish intent | v1 | Intent labels, not vendor SKU |
+| Texture / pattern studies | v2 | Swatch groupings |
+| Trim / millwork intent | v2 | Profiles, heights — design language |
+| Wall / floor / ceiling treatments | v2 | Surface design intent per space |
+
+#### 5. FF&E & fixtures (design spec, not procurement)
+
+| Item | Phase | Notes |
+|------|-------|-------|
+| FF&E schedule (design layer) | v1 | What goes where — links to **Inventory** when SKU exists |
+| Fixture & equipment intent | v2 | Plumbing fixtures, appliances — design selection |
+| Loose furniture list | v1 | Pieces by space |
+| Built-in / casework intent | v2 | Vanities, closets, banquettes |
+| Lighting intent | v2 | Fixture types, layers — not MEP calcs (**Build**) |
+| Art & accessory intent | Later | Placement and scale notes |
+| Hardware & ironmongery intent | v2 | Design direction; SKUs → **Inventory** |
+
+#### 6. Visual & presentation assets (source art)
+
+| Item | Phase | Notes |
+|------|-------|-------|
+| Renderings / visualizations | v2 | Design-phase imagery |
+| Elevations (design sketches) | v2 | Interior elevations as studies |
+| 3D views / vignettes | v2 | Room hero shots for internal review |
+| Material boards (digital) | v1 | Composed finish boards |
+| Annotation overlays | v2 | Markups on sketches/plans |
+| Before / after studies | Later | Transformation concepts |
+
+Export/embed via Core composition classes → **Presentations** (Design does not own client send/approval).
+
+#### 7. Design decisions & traceability
+
+| Item | Phase | Notes |
+|------|-------|-------|
+| Design decisions log | v2 | What was decided and why |
+| Rejected options archive | v2 | History, not deleted |
+| Client preference capture (exploration) | v2 | Likes/dislikes during exploration; formal approval → **Presentations** |
+| Design assumptions | v2 | Budget band, lead-time assumptions |
+| Open design questions | v1 | TBD items per space |
+| Internal design sign-off | Later | Designer/lead approval before Presentations |
+
+#### 8. Libraries & reuse (firm design IP)
+
+| Item | Phase | Notes |
+|------|-------|-------|
+| Firm design library | v2 | Saved palettes, templates, concept starters |
+| Room templates / kit-of-parts | Later | Standard bath, kitchen modules |
+| Typical details (design) | Later | Design-standard junctions, not construction details |
+| Preferred materials list | v2 | Firm defaults; vendor links → **Inventory** / **Agora** |
+| Brand / aesthetic tags | v2 | Searchable design taxonomy |
+
+#### 9. Cross-module links (Design as hub)
+
+| Module | Design role |
+|--------|-------------|
+| **Inventory** | Reference products in layouts; alternatives/pricing stay in Inventory |
+| **Presentations** | Export palettes, boards, room compares, visuals |
+| **Build** | Pass spatial intent; Build owns drawings, tags, approvals |
+| **Documents** | Attach formal refs; Design owns exploratory assets |
+| **Notes** | Link meeting context; Design owns design annotations |
+| **Planner** | Design milestones as metadata, not Gantt ownership |
+
+**Module definition:** Design is where the firm explores **space, look, and intent** before anything is priced, built, or sent to the client.
 
 ### Presentations
 
@@ -523,13 +710,6 @@ Design is the **creativity area**; Presentations **assembles and delivers** outp
 ### IBC room-size planner (decided)
 
 Earlier planning considered a standalone **Tools** module. **Decided:** IBC room-size / occupancy planning lives in the **Build** module (code compliance and architect workflows), not Design.
-
-### Project features (still TBD)
-
-| Feature | Leading placement |
-|---------|-------------------|
-| Room side-by-side compare | Design |
-| Color scheme in deliverables | Presentations (assets from Design) |
 
 ---
 
@@ -816,6 +996,7 @@ flowchart TB
 |------|-------|
 | **Server** | **NestJS**, TypeScript, PostgreSQL 16, pg-boss |
 | **Web client** | **Next.js**, React, TypeScript, **shadcn/ui**, **Tailwind CSS** |
+| **Desktop client** | **Same Studio build** as web; local replica + sync (shell TBD) |
 | **Mobile** | React Native, TypeScript, MapLibre (Companion) |
 
 ### Stack table
@@ -823,6 +1004,7 @@ flowchart TB
 | Layer | Component | Technology | Swap boundary |
 |-------|-----------|------------|---------------|
 | Experience | Studio designer + client | React, Next.js, TS, shadcn/ui, Tailwind | `studio/shared` |
+| Experience | Studio desktop | Same UI build; local DB + sync layer | `studio/apps/studio` + `studio/shared` |
 | Experience | Agora web | Next.js, React, TS, shadcn/ui, Tailwind | `agora/web` |
 | Experience | Companion | React Native, TypeScript, MapLibre | `companion/` |
 | UI icons | Icon assets | Lucide (TBD); separate static host | CDN / asset URL |
@@ -871,6 +1053,9 @@ Web: `maplibre-gl` + free tiles (OpenFreeMap / self-hosted OSM). Mobile: `@mapli
 
 | Capability | Notes |
 |------------|-------|
+| **Studio offline & sync** | Desktop local replica; sync to Core; **conflict resolution** when same entry changed in two places |
+| **External tool bridges** | Export/import/connect to Excel, Pinterest, Instagram, and similar — adoption path for legacy workflows |
+| **Feature iteration ranking** | Prioritize implementation by **biggest user needs** (see [§1](#1-document-governance--apm)); backlogs are exhaustive, delivery order is ranked separately |
 | **Updater / installer / migrator** | Version check, install, schema/data migration for self-hosted |
 | **Visual themes** | Core defaults + org overrides |
 | **Drawing approval** | Pipeline workflow — module vs Planner/Build TBD |
@@ -913,6 +1098,17 @@ User → Surface → Operation envelope → Orchestrator (lock) → Module steps
 
 ## 17. Feature backlog
 
+> **Prioritization:** Items below are captured ideas — **not** delivery order. Rank each iteration by **biggest user needs** before scheduling ([§1](#feature-prioritization-how-to-read-this-plan)).
+
+### Platform / Studio
+- [ ] Studio **desktop** shell — same build as web
+- [ ] Local replica + **offline** read/write for designers
+- [ ] **Sync** desktop ↔ Core when online
+- [ ] **Conflict resolution** UI when same entry changed in two places
+- [ ] **Excel** export/import (Inventory, Design FF&E, schedules)
+- [ ] **Pinterest** / **Instagram** connect or reference import (Design mood/reference boards)
+- [ ] Generic CSV/image/PDF export hooks per module
+
 ### Planner
 - [ ] Kanban, Gantt, vendor outreach, staff rotations
 - [ ] **Tasks** — daily todo list (Companion check-off)
@@ -943,9 +1139,33 @@ User → Surface → Operation envelope → Orchestrator (lock) → Module steps
 - [ ] Meeting workspace — quick access to Presentations, floor plans, Documents
 
 ### Design
-- [ ] Creativity workspace — concepts, exploration
-- [ ] **Adjacency diagrams**
-- [ ] Room side-by-side compare (candidate)
+
+Full catalog: [§10 Design](#design). Phased backlog:
+
+**v1**
+- [ ] Spaces / rooms, zones, design phases
+- [ ] Adjacency & circulation diagrams
+- [ ] Mood boards, color palettes & schemes, material palettes
+- [ ] Design concepts, iterations, reference imagery
+- [ ] Room side-by-side compare
+- [ ] FF&E schedule (design layer), loose furniture list, finish intent
+- [ ] Digital material boards
+- [ ] Open design questions per space
+- [ ] Presentations export hooks (composition classes)
+
+**v2**
+- [ ] Space program, zoning & level/stack diagrams
+- [ ] Style guides, narratives, option studies
+- [ ] Space plans, furniture blocking, sight lines, key dimensions
+- [ ] Texture/trim/surface treatments, fixture & casework intent
+- [ ] Renderings, elevations, vignettes, annotations
+- [ ] Decisions log, rejected archive, client preference capture (exploration)
+- [ ] Firm design library, preferred materials, aesthetic tags
+
+**Later**
+- [ ] Clearance/ergonomics notes, art & accessory intent
+- [ ] Before/after studies, kit-of-parts, typical details
+- [ ] Internal design sign-off, sustainability/accessibility intent
 
 ### Presentations
 - [ ] **Customizable client proposals** (templates per firm/project)
@@ -983,6 +1203,7 @@ User → Surface → Operation envelope → Orchestrator (lock) → Module steps
 - [ ] **Trigger classes** and workflow routing
 - [ ] **Event handlers** (outbox, lifecycle, cross-module)
 - [ ] **Composition interfaces** for cross-module UI blocks (Presentations, dashboards)
+- [ ] **Sync API** for Studio desktop push/pull + conflict metadata (pairs with [§7](#studio-desktop--web-same-build))
 - [ ] Users, orgs, roles (approvals, RBAC)
 - [ ] Multi-language SDK pipeline
 
@@ -1033,10 +1254,13 @@ User → Surface → Operation envelope → Orchestrator (lock) → Module steps
 | Dashboard shell | Core **UI toolbox** + composition framework; module widgets; joined data via Reports |
 | Core workflows | **Trigger classes** + **event handlers** for config-driven automation |
 | Nest + Next split | Nest = Core/server/modules; Next = web UI (shadcn); not dual business logic |
+| Studio surfaces | **Web + desktop** — same UI build; desktop offline + sync + conflict resolve |
+| External tools | Export/import/connect — Excel, Pinterest, Instagram, etc. |
+| Prioritization | Rank iterations by **biggest user needs**; backlogs are exhaustive catalogs |
 | Presentations | Customizable client proposals; tax options; Inventory alternatives via composition classes |
 | Business cost verify | **Cost verification** for accurate charging; ties to proposals and Inventory |
 | Inventory alternatives | Grouped product options (price, lead time) embeddable in Presentations |
-| Design adjacency | **Adjacency diagrams** in Design module |
+| Design scope | Full phased catalog in §10 — creativity/intent; not client delivery or construction docs |
 
 ---
 
@@ -1063,8 +1287,8 @@ User → Surface → Operation envelope → Orchestrator (lock) → Module steps
 | 9 | Email in Core vs Communications module | **Answered** — Communications module; optional Core transport TBD ([§20](#20-core-design--needing-to-discuss-high-priority)) |
 | 10 | Shipment tracking placement | **Answered** — Inventory |
 | 11 | Notes vs Calendar boundary | **Answered** — Notes separate; calendar in Planner |
-| 12 | Mood board / color scheme placement | **Partial** — Design creates; Presentations delivers |
-| 13 | Room side-by-side compare | **Partial** — likely Design |
+| 13 | Room side-by-side compare | **Answered** — Design v1 |
+| 12 | Mood board / color scheme placement | **Answered** — Design creates; Presentations delivers |
 | 27 | Core composition class catalog | **Open** — interfaces for Presentations, Inventory, Business blocks ([§20](#20-core-design--needing-to-discuss-high-priority)) |
 | 28 | Proposal tax rules — Business vs Presentations | **Partial** — Presentations UI toggle; Business owns tax/cost rules |
 | 14 | Day Tracker / Tasks placement | **Answered** — Planner › Tasks |
@@ -1080,6 +1304,9 @@ User → Surface → Operation envelope → Orchestrator (lock) → Module steps
 | 24 | Module UI loading in Next — build-time vs dynamic imports for third-party UI? | **Open** — [§20](#20-core-design--needing-to-discuss-high-priority) |
 | 25 | Reports data-emission manifest shape | **Open** |
 | 26 | Core optional system mail transport vs Communications-only email | **Open** — [§20](#20-core-design--needing-to-discuss-high-priority) |
+| 29 | Studio desktop shell (Electron vs Tauri vs other) | **Open** |
+| 30 | Offline sync protocol & **conflict resolution** UX (same entry, two writers) | **Open** — [§20](#20-core-design--needing-to-discuss-high-priority) |
+| 31 | External tool integrations — which exports/connectors first (Excel, Pinterest, …)? | **Open** — rank by user need ([§1](#feature-prioritization-how-to-read-this-plan)) |
 
 Use `Ex: TODO` in specs where behavior is not yet finalized.
 
@@ -1155,7 +1382,15 @@ flowchart LR
 - Module registration of trigger handlers in manifest
 - Config-first workflow definitions built on trigger classes
 
-#### H. Communications vs Core email transport (discuss)
+#### H. Studio offline sync & conflict resolution (important)
+
+- Local replica schema on desktop — what entities are offline-eligible per org/project
+- Sync queue: push/pull protocol with Core; relationship to operation envelope and `expectedVersion`
+- **Conflict detection** when desktop and web (or two desktops) edit the **same entry**
+- **Resolution UX** — compare, keep mine/theirs, field-level merge; no silent overwrite for workflow entities
+- Offline mutation replay when server was down during orchestrator lock conflicts
+
+#### I. Communications vs Core email transport (discuss)
 
 | Approach | Pros | Cons |
 |----------|------|------|
@@ -1165,14 +1400,14 @@ flowchart LR
 
 **Current decision:** **Communications module** for product email. **Open:** whether Core exposes a thin `EmailTransport` interface for operational mail and for external apps that only need Core (no full Communications). Low risk if the interface is small and Communications implements it too.
 
-#### I. Cross-cutting services
+#### J. Cross-cutting services
 
 - FileStore paths and permissions
 - Event outbox + module event subscriptions
 - Search: PostgreSQL FTS v1 adapter interface
 - Updater / installer / migrator for self-hosted
 
-#### J. First vertical slice (pick one)
+#### K. First vertical slice (pick one)
 
 Candidates to validate loader + envelope + one Surface end-to-end:
 
@@ -1186,8 +1421,9 @@ Candidates to validate loader + envelope + one Surface end-to-end:
 3. Users/roles + Client portal RBAC
 4. Surface `load` composition
 5. API composer + `contributions.api`
-6. Core email transport vs Communications-only
-7. First vertical slice module choice
+6. Studio offline sync & conflict resolution (designer resilience)
+7. Core email transport vs Communications-only
+8. First vertical slice module choice
 
 ### Plain-language reminder
 
@@ -1205,6 +1441,8 @@ Candidates to validate loader + envelope + one Surface end-to-end:
 | **Public ID** | Stable ID modules use to reference each other's entities |
 | **Surface API** | HTTP API Studio/Client call |
 | **Public API** | Smaller HTTP API for Companion and partners |
+| **Local replica** | Desktop copy of project data for offline Studio work |
+| **Sync conflict** | Same record changed in two places — user must resolve before merge |
 
 ---
 
@@ -1229,3 +1467,6 @@ Candidates to validate loader + envelope + one Surface end-to-end:
 | 2025-06 | Build **Tags** on drawing sets; optional Inventory links for install-day workflows |
 | 2025-06 | Core **trigger classes**, **event handlers**, **UI toolbox**; composition class system for cross-module UI |
 | 2025-06 | Design **adjacency diagrams**; Presentations customizable proposals (tax options); Inventory **alternatives**; Business **cost verification** |
+| 2025-06 | Design module **full phased catalog** (v1/v2/later) documented in §10 |
+| 2025-06 | Studio **web + desktop** same build; offline local replica, sync, conflict resolution |
+| 2025-06 | External tool export/connect (Excel, Pinterest, Instagram); prioritize iterations by user need |

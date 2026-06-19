@@ -100,6 +100,7 @@ AI and contributors should **not** hand-edit APM-generated documents (`docs/ARCH
 | **Surface** | Workflow boundary (not a page) |
 | **Module** | Pluggable domain unit |
 | **Operation envelope** | Standard payload for orchestrated actions |
+| **Trigger class** | Core workflow starter — invokes registered handlers on configured events |
 | **Public ID** | Stable, API-safe identifier |
 | **Internal ID** | Module-owned storage identifier |
 
@@ -130,6 +131,8 @@ A Surface defines user intent, workflow boundary, data obligations, and save beh
 ### Composition model
 
 Resolution order: **Core defaults → Module defaults → Organization overrides → Runtime**.
+
+**Composition class system (Core):** Core defines **interfaces and base classes** for embeddable UI/data blocks (e.g. presentation line items, priced selections, approval panels). Modules implement these contracts so **Presentations**, dashboards, and Surfaces can compose cross-module content without tight coupling.
 
 ### Admin
 
@@ -252,7 +255,9 @@ flowchart TD
 - Identity, org-scoped **RBAC**
 - Contract registry and **SDK generation**
 - **Orchestrator** and operation envelope execution
-- Workflow engine shell and **workflow locks**
+- **Workflow engine** — **trigger classes** (config-driven workflow starters), **event handlers**, and workflow locks
+- **Event handlers** — Core and modules react to platform events (outbox, triggers, lifecycle)
+- **Primary UI toolbox** — composition framework to assemble Erganis UI (layouts, slots, widgets, themes); modules contribute pieces; Studio/Client render via Next.js + shadcn
 - **pg-boss** job runner and PostgreSQL **event outbox**
 - **FileStore** and Search adapter interfaces
 - Composition resolution (themes, layouts, module enablement)
@@ -265,13 +270,15 @@ flowchart TD
 | `AppModule` | Bootstrap, config |
 | `AuthModule` | Identity, sessions, RBAC |
 | `OrchestratorModule` | Operation envelope, locks, retries, compensation |
+| `WorkflowModule` | **Trigger classes**, workflow definitions, handler routing |
 | `ModuleLoaderModule` | Load `erganis.module.json`; run module migrations on enable |
 | `SurfaceModule` | Surface API routes |
 | `PublicApiModule` | Public API routes |
 | `JobModule` | pg-boss workers |
 | `FileModule` | `LocalFileStore` (`ERGANIS_DATA_ROOT`) |
 | `SearchModule` | PostgreSQL FTS adapter |
-| `CompositionModule` | Org overrides, themes |
+| `CompositionModule` | Org overrides, themes, **UI toolbox** (layout/slot registry) |
+| `EventModule` | **Event handlers** — subscribe/dispatch; ties to outbox and trigger classes |
 | `OutboxModule` | Event outbox poller |
 
 ### Contracts & SDKs
@@ -288,7 +295,9 @@ flowchart TD
 - **Updater / installer / migrator** — self-hosted Windows/Linux deployments stay current
 - **Visual themes** — Core defaults + org overrides
 - **Users & roles** — identity, org membership, and **roles** live in **Core** (e.g. drawing approvers, RBAC). Modules reference Core users by Public ID; they do not own the user directory.
-- **Dashboard / UI shell** — Core provides composition slots and layout framework so any surface can host module dashboards; joined cross-module dashboards lean on **Reports** (see [§10](#10-module-catalog)).
+- **Trigger classes** — Core-defined workflow starters (e.g. on save, on approve, on schedule). Modules register handlers that trigger classes invoke; config-first pipeline definitions build on these classes.
+- **Event handlers** — react to domain and platform events (outbox delivery, module lifecycle, cross-module notifications). Distinct from orchestrator **steps** (synchronous envelope) but may enqueue operations or jobs.
+- **Primary UI toolbox** — Core-owned composition system to assemble Erganis UI: layout regions, navigation shell, slot registry, theme tokens, dashboard/widget mounting. Modules contribute React components into slots; **Next.js + shadcn** in Studio render the assembled shell. Joined cross-module dashboards lean on **Reports** ([§10](#10-module-catalog)).
 
 ### Core design next step
 
@@ -408,13 +417,13 @@ First-party modules live primarily in `studio/modules/`. **Exception:** Agora or
 |--------|------|---------|
 | **Planner** | studio | Kanban, Gantt, **Tasks** (daily todo list), **calendar/scheduling**, vendor outreach, staff rotations, MEP *project* milestones |
 | **Communications** | studio | Email (Gmail/Outlook/etc.), vendor & client correspondence; iCal link emission when enabled (feeds Planner calendar) |
-| **Inventory** | studio | Products/materials; **shipment/carrier tracking** merged here |
+| **Inventory** | studio | Products/materials; **alternatives** for client selections; **shipment tracking**; composable into Presentations |
 | **Documents** | studio | Formal file vault — certs, trade docs, attachments; **not** meeting notes |
 | **Notes** | studio | Meeting notes, client context, dictation, Zoom/Meet (TBD) |
-| **Design** | studio | **Creativity workspace** — concepts, exploration, room compare; feeds **Presentations** |
-| **Presentations** | studio | Shareable outputs (client proposals, approvals, comments); may use Design assets; not limited to client-only use cases |
+| **Design** | studio | **Creativity workspace** — concepts, **adjacency diagrams**, room compare; feeds **Presentations** |
+| **Presentations** | studio | **Customizable client proposals** (approvals, tax options); shareable outputs; embeds Inventory/Design via Core composition classes |
 | **Build** | studio | Drawings, MEP, **light schedules**, **IBC room planner**, **Tags** on drawing sets (optional **Inventory** links); **drawing approval workflow** (uses Core roles/users) |
-| **Business** | studio | Running the firm — **billing, taxes**, operational finance |
+| **Business** | studio | Firm operations — **billing, taxes**, **cost verification** |
 | **Reports** | studio | Cross-module analytics; modules **register data emissions** for Reports to consume |
 | **Agora (org module)** | **agora** | Org-scoped vendors, trade tracking, sync with public Agora catalog |
 
@@ -443,7 +452,27 @@ First-party modules live primarily in `studio/modules/`. **Exception:** Agora or
 
 - Product/material lifecycle.
 - **Shipment tracking** (carrier links, aggregator APIs — UPS, FedEx, USPS, AfterShip, etc.) lives here, not a separate module.
+- **Product alternatives** — group options for the same selection slot (e.g. three hardware choices with **price** and **lead time** each). Designed for designer → client selection workflows and **Presentations** (see below).
 - Optional cross-link: products referenced by **Build** drawing-set **Tags** (see [Build](#build)).
+- **Presentations integration:** Inventory items and alternative sets expose **composition blocks** via Core **interfaces / base classes** (e.g. `PresentableSelection`, `PricedLineItem`) so Presentations can embed live product data without duplicating catalog fields.
+
+### Design
+
+- **Creativity workspace** — concepts, exploration, mood boards, room compare.
+- **Adjacency diagrams** — spatial relationship diagrams (rooms, zones, circulation); design-phase artifact; may feed Presentations or Build references.
+- Feeds **Presentations** with creative assets; distinct from client-facing proposal assembly.
+
+### Presentations
+
+- **Customizable client proposals** — templates firms can tailor per project or client type.
+- **Client approval workflow** — send proposal to Client portal; comments, selections, sign-off (operation envelope where state changes).
+- **Proposal options** — e.g. **include tax vs tax excluded** on line items or summary (org/tax rules from **Business** where applicable).
+- Embeds content from **Design** (visuals) and **Inventory** (products, **alternatives** with price/lead time) via Core **composition class system** — module types implement Core-defined presentation interfaces so blocks are pluggable in the proposal builder.
+- Not limited to client-only use cases — internal reviews, vendor packages, etc.
+
+**Example flow:** Designer builds a hardware selection in Inventory (3 alternatives, price + lead time each) → adds an Inventory composition block to a Presentations proposal → client sees options in Client portal and approves one.
+
+**Inventory ↔ Presentations ↔ Business:** Presentations displays pricing from Inventory/Business contracts; **cost verification** (are we charging correctly?) is a **Business** concern that validates against cost/margin rules before or during proposal send — see [Business](#business-vs-reports-separate-modules).
 
 ### Notes vs Documents (separate modules)
 
@@ -457,11 +486,11 @@ First-party modules live primarily in `studio/modules/`. **Exception:** Agora or
 
 | | Design | Presentations |
 |---|--------|-----------------|
-| **Purpose** | Creative exploration | Shareable deliverables |
+| **Purpose** | Creative exploration | Shareable deliverables & client approval |
 | **Audience** | Design team (primarily) | Clients, stakeholders, internal reviews |
-| **Examples** | Mood exploration, room compare concepts | Proposals, approvals, comment threads |
+| **Examples** | Adjacency diagrams, mood exploration, room compare | Customizable proposals, tax options, Inventory alternative picks |
 
-Design is the **creativity area**; Presentations **uses** Design assets when building client-facing outputs.
+Design is the **creativity area**; Presentations **assembles and delivers** outputs using Design assets and Inventory composition blocks.
 
 ### Build
 
@@ -477,13 +506,14 @@ Design is the **creativity area**; Presentations **uses** Design assets when bui
 
 | | Business | Reports |
 |---|----------|---------|
-| **Purpose** | Firm operations — billing, taxes | Analytics & dashboards across modules |
+| **Purpose** | Firm operations — billing, taxes, **cost verification** | Analytics & dashboards across modules |
 | **Dashboards** | Business-owned widgets | Reports-owned widgets |
 | **Data** | Own domain tables | Consumes **registered emissions** from other modules |
 
-Modules that want Reports access expose data via a **registration/emission contract** (manifest TBD). Any app surface may *display* a dashboard widget, but **joined cross-module reporting** flows through Reports.
+- **Cost verification** — ensure quoted/charged amounts are accurate (margin, cost basis, tax treatment). Validates proposal and invoice line items against firm rules; integrates with **Presentations** (pre-send checks) and **Inventory** (cost vs list price). Critical for trustworthy client proposals.
+- Modules that want Reports access expose data via a **registration/emission contract** (manifest TBD). Any app surface may *display* a dashboard widget, but **joined cross-module reporting** flows through Reports.
 
-**Core** provides dashboard **shell/slots**; module content plugs in ([§6](#6-core)).
+**Core** provides **UI toolbox** / dashboard **shell/slots**; module content plugs in ([§6](#6-core)).
 
 ### Agora org module (`agora/modules/`)
 
@@ -899,6 +929,8 @@ User → Surface → Operation envelope → Orchestrator (lock) → Module steps
 
 ### Inventory
 - [ ] Product/material tracking
+- [ ] **Product alternatives** — grouped options (price, lead time) for client selections
+- [ ] Composition blocks for Presentations (Core presentation interfaces)
 - [ ] Shipment / carrier tracking (aggregator API research)
 
 ### Documents
@@ -912,12 +944,15 @@ User → Surface → Operation envelope → Orchestrator (lock) → Module steps
 
 ### Design
 - [ ] Creativity workspace — concepts, exploration
+- [ ] **Adjacency diagrams**
 - [ ] Room side-by-side compare (candidate)
 
 ### Presentations
-- [ ] Shareable proposals, comments, item approval
+- [ ] **Customizable client proposals** (templates per firm/project)
+- [ ] Client approval workflow (Client portal)
+- [ ] Proposal options — **tax included vs excluded**
+- [ ] Embed Inventory alternatives & Design assets via Core composition classes
 - [ ] Client / stakeholder delivery
-- [ ] Use Design assets in presentations
 
 ### Build
 - [ ] Drawings, MEP, light schedules (plumbing schedules, etc.)
@@ -927,6 +962,8 @@ User → Surface → Operation envelope → Orchestrator (lock) → Module steps
 
 ### Business
 - [ ] Billing, taxes, firm operations
+- [ ] **Cost verification** — quoted/charged vs cost basis and margin rules
+- [ ] Pre-send validation hooks for Presentations proposals
 - [ ] Business-owned dashboards
 
 ### Reports
@@ -942,7 +979,10 @@ User → Surface → Operation envelope → Orchestrator (lock) → Module steps
 
 ### Core
 - [ ] Updater, installer, migrator (incl. module DB migrations)
-- [ ] Visual themes, dashboard/UI composition shell
+- [ ] Visual themes, **UI toolbox**, composition shell
+- [ ] **Trigger classes** and workflow routing
+- [ ] **Event handlers** (outbox, lifecycle, cross-module)
+- [ ] **Composition interfaces** for cross-module UI blocks (Presentations, dashboards)
 - [ ] Users, orgs, roles (approvals, RBAC)
 - [ ] Multi-language SDK pipeline
 
@@ -990,8 +1030,13 @@ User → Surface → Operation envelope → Orchestrator (lock) → Module steps
 | Design vs Presentations | Separate; Design = creativity, Presentations = shareable outputs |
 | Build scope | Drawings, MEP, light schedules, **IBC room planner**, **drawing-set Tags** (optional Inventory links), drawing approval workflow |
 | Users & roles | Owned by **Core**; modules reference by Public ID |
-| Dashboard shell | Core composition framework; module widgets; joined data via Reports |
+| Dashboard shell | Core **UI toolbox** + composition framework; module widgets; joined data via Reports |
+| Core workflows | **Trigger classes** + **event handlers** for config-driven automation |
 | Nest + Next split | Nest = Core/server/modules; Next = web UI (shadcn); not dual business logic |
+| Presentations | Customizable client proposals; tax options; Inventory alternatives via composition classes |
+| Business cost verify | **Cost verification** for accurate charging; ties to proposals and Inventory |
+| Inventory alternatives | Grouped product options (price, lead time) embeddable in Presentations |
+| Design adjacency | **Adjacency diagrams** in Design module |
 
 ---
 
@@ -1020,6 +1065,8 @@ User → Surface → Operation envelope → Orchestrator (lock) → Module steps
 | 11 | Notes vs Calendar boundary | **Answered** — Notes separate; calendar in Planner |
 | 12 | Mood board / color scheme placement | **Partial** — Design creates; Presentations delivers |
 | 13 | Room side-by-side compare | **Partial** — likely Design |
+| 27 | Core composition class catalog | **Open** — interfaces for Presentations, Inventory, Business blocks ([§20](#20-core-design--needing-to-discuss-high-priority)) |
+| 28 | Proposal tax rules — Business vs Presentations | **Partial** — Presentations UI toggle; Business owns tax/cost rules |
 | 14 | Day Tracker / Tasks placement | **Answered** — Planner › Tasks |
 | 15 | Erganis Planner naming | **Open** — "Planner" working name |
 | 16 | Room size / IBC planner | **Answered** — Build module |
@@ -1055,7 +1102,7 @@ flowchart LR
 |-------|----------------|
 | **1 — Contracts** | Operation envelope JSON Schema; Public ID model; Core OpenAPI baseline; module manifest v1 (`api`, `reports` emissions) |
 | **2 — Runtime shell** | Auth; org + **users + roles**; module loader lifecycle; orchestrator + locks + operation log; Core + module migrator |
-| **3 — Platform services** | FileStore; pg-boss + outbox; search adapter; composition resolver; **dashboard/UI shell** |
+| **3 — Platform services** | FileStore; pg-boss + outbox; search adapter; composition resolver; **UI toolbox**; **trigger classes**; **event handlers** |
 | **4 — API surface** | Surface API gateway; Public API subset; org API composer (enabled modules); SDK pipeline |
 
 ### Workshop topics (discuss next)
@@ -1093,14 +1140,22 @@ flowchart LR
 - Response when module disabled (`404` vs structured error)
 - SDK strategy: baseline + optional module packages
 
-#### F. Dashboard & UI composition (important)
+#### F. Dashboard, UI toolbox & composition classes (important)
 
-- Core provides **layout slots** and navigation shell (decided direction)
+- Core **UI toolbox** — layout regions, navigation shell, slot registry, theme tokens
 - Modules register dashboard widgets and Studio UI slots
+- **Composition interfaces / base classes** — embeddable blocks (Inventory alternatives in Presentations, cost verification panels from Business)
 - **Reports** owns joined analytics; single-module dashboards stay in owning module
 - How Next.js **imports** module UI (build-time workspace graph vs dynamic — affects third-party modules)
 
-#### G. Communications vs Core email transport (discuss)
+#### G. Trigger classes & event handlers (important)
+
+- **Trigger class** taxonomy — what can start a workflow (save, approve, schedule, inbound email, etc.)
+- Relationship to operation envelope (sync steps) vs async **event handlers**
+- Module registration of trigger handlers in manifest
+- Config-first workflow definitions built on trigger classes
+
+#### H. Communications vs Core email transport (discuss)
 
 | Approach | Pros | Cons |
 |----------|------|------|
@@ -1110,14 +1165,14 @@ flowchart LR
 
 **Current decision:** **Communications module** for product email. **Open:** whether Core exposes a thin `EmailTransport` interface for operational mail and for external apps that only need Core (no full Communications). Low risk if the interface is small and Communications implements it too.
 
-#### H. Cross-cutting services
+#### I. Cross-cutting services
 
 - FileStore paths and permissions
 - Event outbox + module event subscriptions
 - Search: PostgreSQL FTS v1 adapter interface
 - Updater / installer / migrator for self-hosted
 
-#### I. First vertical slice (pick one)
+#### J. First vertical slice (pick one)
 
 Candidates to validate loader + envelope + one Surface end-to-end:
 
@@ -1143,6 +1198,10 @@ Candidates to validate loader + envelope + one Surface end-to-end:
 | **Surface** | A workflow screen contract (e.g. Project, Product) — not one React page |
 | **Operation envelope** | Standard "do this action" package for **writes** across modules |
 | **Orchestrator** | Core component that runs envelope steps in order with locks |
+| **Trigger class** | Core-defined starter that kicks off a workflow when something happens |
+| **Event handler** | Code that reacts to a platform or domain event (often async) |
+| **UI toolbox** | Core system that assembles layouts and slots where module UI plugs in |
+| **Composition class** | Core interface/base type modules implement so other modules can embed their UI/data |
 | **Public ID** | Stable ID modules use to reference each other's entities |
 | **Surface API** | HTTP API Studio/Client call |
 | **Public API** | Smaller HTTP API for Companion and partners |
@@ -1168,3 +1227,5 @@ Candidates to validate loader + envelope + one Surface end-to-end:
 | 2025-06 | Core design workshop backlog captured in §20 |
 | 2025-06 | IBC room-size / occupancy planner in **Build** module |
 | 2025-06 | Build **Tags** on drawing sets; optional Inventory links for install-day workflows |
+| 2025-06 | Core **trigger classes**, **event handlers**, **UI toolbox**; composition class system for cross-module UI |
+| 2025-06 | Design **adjacency diagrams**; Presentations customizable proposals (tax options); Inventory **alternatives**; Business **cost verification** |

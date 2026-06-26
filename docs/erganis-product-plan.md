@@ -2,6 +2,8 @@
 
 > **Status:** Pre-PRD planning document. Single source of truth until APM-managed documents (PRD, ARCHITECTURE, etc.) are generated from `.apm/templates/`.
 >
+> **Core kickoff:** **Complete** (Jun 2025) — ready to begin **Phase 0**. See [§21 Core readiness](#21-core-readiness--design-backlog).
+>
 > **Do not** edit template output files (`ARCHITECTURE.md`, `PRD.md`, etc.) directly — use APM and fragment workflows. This plan will be broken into fragments when templates are ready.
 
 ---
@@ -17,18 +19,20 @@
 7. [Studio](#7-studio)
 8. [Erganis Agora](#8-erganis-agora)
 9. [Companion](#9-companion)
-10. [Module catalog](#10-module-catalog)
-11. [Module system & manifests](#11-module-system--manifests)
-12. [Operation envelope & orchestration](#12-operation-envelope--orchestration)
-13. [API layers & contracts](#13-api-layers--contracts)
-14. [Technology stack](#14-technology-stack)
-15. [Cross-cutting platform capabilities](#15-cross-cutting-platform-capabilities)
-16. [Explorations & spikes](#16-explorations--spikes)
-17. [Feature backlog](#17-feature-backlog)
-18. [Resolved decisions](#18-resolved-decisions)
-19. [Open questions](#19-open-questions)
-20. [Core design — needing to discuss (high priority)](#20-core-design--needing-to-discuss-high-priority)
-21. [Decision log](#21-decision-log)
+10. [Mnemosyne (Lyceum)](#10-mnemosyne-lyceum)
+11. [Module catalog](#11-module-catalog)
+12. [Module system & manifests](#12-module-system--manifests)
+13. [Operation envelope & orchestration](#13-operation-envelope--orchestration)
+14. [API layers & contracts](#14-api-layers--contracts)
+15. [Technology stack](#15-technology-stack) — incl. [stack tier → repository map](#stack-tier--repository-map)
+16. [Cross-cutting platform capabilities](#16-cross-cutting-platform-capabilities)
+17. [Explorations & spikes](#17-explorations--spikes)
+18. [Feature backlog](#18-feature-backlog)
+19. [Resolved decisions](#19-resolved-decisions)
+20. [Open questions](#20-open-questions) — incl. [before Core vs later](#before-core-vs-later)
+21. [Core readiness & design backlog](#21-core-readiness--design-backlog) — **start here for implementation**
+22. [Core kickoff decisions (reference)](#22-core-kickoff-decisions-reference) — P35–P39
+23. [Decision log](#23-decision-log)
 
 ---
 
@@ -49,7 +53,7 @@ When phasing work (v1 / v2 / later, or sprint slices):
 3. **Risk reduction** — Does it validate Core contracts (envelope, sync, modules) early?
 4. **Dependency** — What must exist first?
 
-Module backlogs in [§17](#17-feature-backlog) and phased catalogs (e.g. [Design](#design)) are **ideas captured in full**; **delivery order** should be re-sorted against user-need ranking before each planning cycle. APM / PRD fragments should record the ranked iteration when promoted.
+Module backlogs in [§18](#18-feature-backlog) and phased catalogs (e.g. [Design](#design)) are **ideas captured in full**; **delivery order** should be re-sorted against user-need ranking before each planning cycle. APM / PRD fragments should record the ranked iteration when promoted.
 
 ### APM workspace rules
 
@@ -77,7 +81,7 @@ AI and contributors should **not** hand-edit APM-generated documents (`docs/ARCH
 
 ### ADR folder (removed)
 
-**ADR** (Architecture Decision Record) is a standard pattern for logging significant technical decisions. The former `docs/adr/001-operation-envelope.md` content is merged into [§12](#12-operation-envelope--orchestration). Future formal ADRs will be created via **APM** (`ADR.template.md`), not ad-hoc folders.
+**ADR** (Architecture Decision Record) is a standard pattern for logging significant technical decisions. The former `docs/adr/001-operation-envelope.md` content is merged into [§13](#13-operation-envelope--orchestration). Future formal ADRs will be created via **APM** (`ADR.template.md`), not ad-hoc folders.
 
 ---
 
@@ -85,7 +89,7 @@ AI and contributors should **not** hand-edit APM-generated documents (`docs/ARCH
 
 **Erganis Platform** is a modular, workflow-driven ecosystem for interior design and the broader build environment.
 
-**Four deployable children:** **Core**, **Studio**, **Agora**, **Companion**. **Core** is the universal foundation — not Studio-only.
+**Five deployable children:** **Core**, **Studio**, **Agora**, **Companion**, **Mnemosyne**. **Core** is the universal foundation — not Studio-only.
 
 **Three pillars:**
 
@@ -108,13 +112,14 @@ AI and contributors should **not** hand-edit APM-generated documents (`docs/ARCH
 | **Studio** | Designer + client apps + modules (`studio/`) — **web and desktop** |
 | **Erganis Agora** | Public vendor website + global catalog |
 | **Agora org module** | Org-scoped vendors + trade tracking (lives in `agora/modules/`) |
-| **Companion** | Mobile app (`companion/`) |
+| **Companion** | Mobile app (`companion/`) — **React Native** |
+| **Mnemosyne** | Historical design reference site (`lyceum/`) — memory of styles; *Lyceum* repo folder |
 | **Guild** | Optional domain term for vendor collectives — not a repo name |
 | **Surface** | Workflow boundary (not a page) |
 | **Module** | Pluggable domain unit |
 | **Operation envelope** | Standard payload for orchestrated actions |
 | **Trigger class** | Core workflow starter — invokes registered handlers on configured events |
-| **Public ID** | Stable, API-safe identifier |
+| **Public ID** | Stable, API-safe identifier — format `{type}_{ulid}` (see [§22 kickoff reference](#22-core-kickoff-decisions-reference)) |
 | **Internal ID** | Module-owned storage identifier |
 
 **Avoid in UX:** "Marketplace" — use **Agora**.
@@ -181,6 +186,7 @@ erganis/                    # Erganis Platform (parent)
 ├── studio/                 # erganis-studio
 ├── agora/                  # erganis-agora
 ├── companion/              # erganis-companion
+├── lyceum/                 # erganis-lyceum (Mnemosyne)
 └── docs/
 ```
 
@@ -189,7 +195,9 @@ erganis/                    # Erganis Platform (parent)
 ```
 studio/apps/*, companion/app  →  Core Surface/Public API  →  Core PostgreSQL
 agora/web                     →  Agora API                 →  Agora PostgreSQL
+lyceum/web                    →  Lyceum API (optional)     →  Lyceum PostgreSQL (or Core — TBD)
 Core ↔ Agora                  →  sync jobs (pg-boss)
+Core **Scraper Services**     →  feeds Agora profiles, Mnemosyne, other consumers
 ```
 
 ### System tiers
@@ -200,6 +208,7 @@ Core ↔ Agora                  →  sync jobs (pg-boss)
 | First-party modules (Studio) | `studio/modules/` |
 | Third-party modules | `studio/modules/third-party/` |
 | Agora service + org module | `agora/` (`api/`, `web/`, `modules/`) |
+| Mnemosyne (Lyceum) | `lyceum/` (`web/`, optional `api/`) |
 
 ### Unified application flow
 
@@ -209,12 +218,14 @@ flowchart TD
         AppStudio[studio/apps/studio]
         AppClient[studio/apps/client]
         AgoraWeb[agora/web]
+        LyceumWeb[lyceum/web Mnemosyne]
         CompanionApp[companion/app]
     end
     subgraph API
         SurfaceAPI[Core Surface API Nest]
         PublicAPI[Core Public API Nest]
         AgoraAPI[agora/api Nest]
+        LyceumAPI[lyceum/api Nest optional]
     end
     subgraph Orchestration
         Orchestrator[Orchestrator]
@@ -225,6 +236,7 @@ flowchart TD
     subgraph Persistence
         CoreDB[(Core PostgreSQL)]
         AgoraDB[(Agora PostgreSQL)]
+        LyceumDB[(Lyceum PostgreSQL optional)]
     end
     subgraph Jobs
         JobRunner[pg-boss]
@@ -234,6 +246,7 @@ flowchart TD
     AppClient --> SurfaceAPI
     CompanionApp --> PublicAPI
     AgoraWeb --> AgoraAPI
+    LyceumWeb --> LyceumAPI
     SurfaceAPI --> Orchestrator
     PublicAPI --> Orchestrator
     Orchestrator --> ModuleHandlers
@@ -243,6 +256,7 @@ flowchart TD
     JobRunner --> SyncWorker
     SyncWorker --> AgoraDB
     AgoraAPI --> AgoraDB
+    LyceumAPI --> LyceumDB
 ```
 
 ---
@@ -261,6 +275,7 @@ flowchart TD
 | `packages/` | Shared TypeScript libraries |
 | `infrastructure/` | Deploy; Docker optional for local Postgres |
 | `scripts/` | Setup, migrate, update CLI |
+| `tools/` | Developer tooling — contract readers, module connection generators, SDK/codegen helpers |
 
 ### Responsibilities
 
@@ -273,6 +288,7 @@ flowchart TD
 - **Primary UI toolbox** — composition framework to assemble Erganis UI (layouts, slots, widgets, themes); modules contribute pieces; Studio/Client render via Next.js + shadcn
 - **pg-boss** job runner and PostgreSQL **event outbox**
 - **FileStore** and Search adapter interfaces
+- **Scraper Services** — modular web scrapers for platform-wide enrichment (see below)
 - Composition resolution (themes, layouts, module enablement)
 - Audit / operation log
 
@@ -293,6 +309,48 @@ flowchart TD
 | `CompositionModule` | Org overrides, themes, **UI toolbox** (layout/slot registry) |
 | `EventModule` | **Event handlers** — subscribe/dispatch; ties to outbox and trigger classes |
 | `OutboxModule` | Event outbox poller |
+| `ScraperModule` | **Scraper Services** — modular scrape jobs, XPath configs, metadata extraction |
+
+### Authentication (decided — [§22 P36](#p36-sso-org-login-vs-communications-oauth))
+
+| Item | Decision |
+|------|----------|
+| **Web (Studio / Client)** | **HttpOnly session cookie** after successful auth |
+| **Public API / Companion** | **JWT** access token (issued after login or API key exchange) |
+| **Primary org login (v1)** | **OIDC** — Google Workspace, Microsoft 365 / Azure AD, Okta (OIDC), etc. |
+| **Local login** | **Minimal fallback** — org bootstrap, dev, break-glass admin — not the primary production path |
+| **SAML** | **Not in v1** — architecture **SAML-ready** via pluggable `AuthProvider` (add `SamlAuthProvider` when enterprise need arises) |
+| **Provider model** | `AuthProvider` interface: `LocalAuthProvider`, `OidcAuthProvider` (v1); `SamlAuthProvider` (future stub) |
+| **Domain JIT** | First successful OIDC login **auto-provisions / links** user when token `email` domain matches org **allowed domains** |
+| **Per-org config** | IdP issuer, client credentials, allowed email domains, `authMode` — stored in Core (`platform` schema) |
+| **Account linking** | IdP `sub` + `providerType` ↔ Core user Public ID |
+| **Roles** | **Admin** default (non-negotiable); other roles **custom-defined in Studio** (permission-based) |
+| **Communications mailbox OAuth** | **Separate** from org SSO — Gmail/Graph per-user consent when **Communications** module ships; optional “same email” UX hint after OIDC login |
+
+**Rule:** Org SSO (OIDC) and Communications mailbox OAuth are **two integrations** — different tokens, scopes, and lifetimes.
+
+### Scraper Services (Core)
+
+**Lives in Core** because multiple products consume scraped web data — not only Agora.
+
+**Purpose:** Pull structured information from external websites on a schedule or on demand. **Modular** — each scrape target is a configurable **component** (recipe), not hard-coded per consumer.
+
+| Config field | Use |
+|--------------|-----|
+| **Source URL** | Page to scrape (vendor site, artist portfolio, designer profile, style reference, etc.) |
+| **XPath (or selector) map** | Extract title, body, images, contact blocks, product lists — per field |
+| **HTTP header analysis** | `Last-Modified`, `ETag`, cache headers — infer **when the site last changed** |
+| **HTML meta extraction** | `description`, `keywords`, Open Graph tags → **tags** and summaries for search/filter |
+
+**Consumers (examples):**
+
+- **Agora** — enrich vendor, artist, or interior-designer public profiles from their website link
+- **Mnemosyne** — ingest or refresh reference content from authoritative external pages (where licensed/appropriate)
+- **Future** — Inventory vendor pages, Communications signatures, etc.
+
+**Runtime:** pg-boss jobs run scrape recipes; results stored in Core or pushed to consumer DB via contracts; respect robots.txt, rate limits, and legal/ToS constraints (policy TBD).
+
+**Not in Studio modules** — scraping is infrastructure; Studio/Agora/Styles **subscribe** to scrape results via APIs and events.
 
 ### Contracts & SDKs
 
@@ -310,11 +368,75 @@ flowchart TD
 - **Users & roles** — identity, org membership, and **roles** live in **Core** (e.g. drawing approvers, RBAC). Modules reference Core users by Public ID; they do not own the user directory.
 - **Trigger classes** — Core-defined workflow starters (e.g. on save, on approve, on schedule). Modules register handlers that trigger classes invoke; config-first pipeline definitions build on these classes.
 - **Event handlers** — react to domain and platform events (outbox delivery, module lifecycle, cross-module notifications). Distinct from orchestrator **steps** (synchronous envelope) but may enqueue operations or jobs.
-- **Primary UI toolbox** — Core-owned composition system to assemble Erganis UI: layout regions, navigation shell, slot registry, theme tokens, dashboard/widget mounting. Modules contribute React components into slots; **Next.js + shadcn** in Studio render the assembled shell. Joined cross-module dashboards lean on **Reports** ([§10](#10-module-catalog)).
+- **Primary UI toolbox** — Core-owned composition system to assemble Erganis UI: layout regions, navigation shell, slot registry, theme tokens, dashboard/widget mounting. Modules contribute React components into slots; **Next.js + shadcn** in Studio render the assembled shell. Joined cross-module dashboards lean on **Reports** ([§11](#11-module-catalog)).
 
-### Core design next step
+See also: [§21 Core readiness](#core-readiness--start-here) · [Stack tier map](#stack-tier--repository-map) · [Initial implementation scope](#initial-core-implementation-scope-decided--22-p38-first-core-vertical-slice)
 
-The platform lives or dies on Core. See **[§20 — Core design (high priority)](#20-core-design--needing-to-discuss-high-priority)** for the design workshop backlog.
+### Initial Core implementation scope (decided — [§22 P38](#p38-first-core-vertical-slice))
+
+All **Phases 0–3** are required for the first shippable Core + module path. **Domain modules live in `studio/modules/`** (or `agora/modules/`) — **not inside `core/`**. Core hosts, loads, and orchestrates them.
+
+| Phase | Repo | Delivers |
+|-------|------|----------|
+| **0 — Shell** | `core/` | Nest app, health, Postgres, layered `services/` + `packages/` |
+| **1 — Auth** | `core/` | OIDC + minimal local fallback, session, JWT, org context, admin + custom roles |
+| **2 — Loader + stub (3C)** | `core/` + `studio/modules/` | Module loader; **hello-world stub module**; authenticated **envelope smoke test** (orchestrator + stub step via `DbUnitOfWork`) |
+| **3 — Documents (3A)** | `studio/modules/documents/` (+ Core FileStore) | First real module: upload, vault, envelope save — loaded by Core |
+
+**Not in initial scope:** **Inventory Save Product (3B)** — **Inventory is a Studio module** (`studio/modules/inventory/`), not Core. Schedule as **follow-on module slice** after Documents to exercise multi-step optional `post_commit` ([§13](#13-operation-envelope--orchestration)).
+
+### Test plan (decided — [§22 P39](#p39--core-test-plan))
+
+> Formal **TEST_STRATEGY** document generated via APM when **Phase 0** scaffold lands. Matrix and tooling locked below.
+
+#### Platform test stack (one runner)
+
+| Area | Runner / libraries | Notes |
+|------|-------------------|--------|
+| **Core** (`core/`) | **Jest** + Nest testing utilities | Nest default; recommended for Core Phases 0–3 |
+| **Nest backends** (Core, `studio/modules/*`, `agora/api`, module servers) | **Jest** | Same runner everywhere server-side TypeScript runs |
+| **Web frontend** (Studio, Client, Agora web, Lyceum web) | **Jest** + **Testing Library** | One platform runner; Next.js-compatible |
+| **Companion** (React Native) | **Jest** + Testing Library RN | Same runner family — avoid Vitest/Jest split unless a future constraint forces it |
+
+**Principle:** **Jest** is the **single platform test runner** unless a submodule documents a hard exception.
+
+#### Database in tests
+
+| Context | Approach |
+|---------|----------|
+| **Local dev** | **Testcontainers** PostgreSQL (real Postgres, isolated per run) |
+| **CI (GitHub Actions)** | **Dedicated Postgres service** container in workflow (faster, stable) — same SQL semantics |
+
+#### Deliverable timing
+
+| When | What |
+|------|------|
+| **Now** | Test matrix + tooling in this plan ([§22 P39](#p39--core-test-plan)) |
+| **Phase 0** | Generate **TEST_STRATEGY** from `.apm/templates/TEST_STRATEGY.template.md`; add first tests + CI steps |
+
+#### CI — GitHub Actions (decided)
+
+**Yes** — build and test run as **GitHub Actions workflow steps** (parent repo already has [`.github/workflows/ci.yml`](../.github/workflows/ci.yml)).
+
+| Phase 0 CI steps (minimum) | Detail |
+|----------------------------|--------|
+| **Checkout** | Submodules recursive |
+| **Setup** | Node 20 |
+| **Install** | `core/services`, `core/packages`, `core/contracts` as they appear |
+| **Lint / typecheck** | When configured |
+| **Build** | Nest compile |
+| **Test** | `npm test` with Postgres **service** container |
+| **Expand per phase** | Auth, orchestrator, loader, Documents tests added as Phases 1–3 land |
+
+Per-submodule repos may mirror the same pattern in their own `.github/workflows/` when split from monorepo parent CI.
+
+#### Minimum cases (Phases 0–3)
+
+OIDC + domain JIT + local fallback; session/JWT; orchestrator txn rollback vs `partial` / `failed`; 409 lock conflict; module loader enable/disable; stub envelope smoke; Documents save + FileStore; 403 disabled module (when routes exist).
+
+#### Locations
+
+`core/infrastructure/tests/` · `core/services/**/*.spec.ts` · `studio/modules/documents/` · extend [§18 Test plan backlog](#test-plan-required--20-39)
 
 ---
 
@@ -344,10 +466,10 @@ Interior designers must **not be blocked when servers are down**. Studio ships a
 
 **Principles:**
 
-- **One build** — No forked desktop UI; desktop wraps or hosts the same Next/React app as web (shell TBD: e.g. Electron/Tauri — [§19](#19-open-questions)).
+- **One build** — No forked desktop UI; desktop wraps or hosts the same Next/React app as web (shell TBD: e.g. Electron/Tauri — [§20](#20-open-questions)).
 - **Offline-capable** — Read/write against local store while disconnected; queue mutations for upload.
 - **Sync to server** — Desktop pushes local changes to Core when connectivity returns; pulls remote changes from Core.
-- **Conflict resolution** — Required when **two writers touch the same entry** (e.g. designer offline on desktop + colleague online on web, or two devices). Must detect concurrent edits (entity version / vector clock / operation log — design in [§20](#20-core-design--needing-to-discuss-high-priority)).
+- **Conflict resolution** — Required when **two writers touch the same entry** (e.g. designer offline on desktop + colleague online on web, or two devices). Must detect concurrent edits (entity version / vector clock / operation log — design in [§21](#21-core-readiness--design-backlog)).
   - Surface conflicts to the user with **compare + resolve** (keep mine, keep theirs, merge fields) — not silent last-write-wins for workflow-critical entities.
   - Align with Core **workflow locks** and operation envelope **expectedVersion** where possible.
 - **Scope** — Designer **Studio** app is the primary offline target; Client portal and Companion remain online-first unless ranked later.
@@ -388,7 +510,7 @@ Module owners declare what they export/import (manifest TBD). **Design** (refere
 
 - Client approvals, comments, selections **feed directly** into org/project data designers see
 - Same data model; different **roles, layouts, and surfaces**
-- **Needs refinement:** auth/RBAC split, allowed operations, orchestrator paths for client mutations, concurrency (see [§19](#19-open-questions))
+- **Needs refinement:** auth/RBAC split, allowed operations, orchestrator paths for client mutations, concurrency (see [§20](#20-open-questions))
 
 ### UI stack (decided)
 
@@ -401,7 +523,7 @@ Module owners declare what they export/import (manifest TBD). **Design** (refere
 
 Shared implementation lives in `studio/shared/` (components, tokens, API clients). **Studio** (`apps/studio`) and **Client** (`apps/client`) both use this stack. **Agora web** (`agora/web`) follows the same Next.js + shadcn + Tailwind pattern for consistency.
 
-**Companion** remains React Native + TypeScript (separate mobile client; not part of this web stack decision).
+**Companion** uses **React Native** + TypeScript (decided) — separate mobile stack, not Next.js ([§9](#9-companion)).
 
 **Icons:** Free vector set (e.g. Lucide) from a **separate static host** — not bundled in repos.
 
@@ -446,6 +568,7 @@ Core still **loads** the module at runtime when enabled for an org (same mechani
 - Vendors may exist in Studio but not on public Agora initially
 - Background job: match org vendors to global Agora; offer sync
 - **MapLibre** for vendor map (web; mobile via MapLibre on Companion when needed)
+- **Scraper Services (Core)** — optional website link + XPath recipes to enrich vendor/artist/designer profiles (headers, meta tags)
 
 ### Vendor onboarding profile (contract)
 
@@ -463,15 +586,87 @@ Core still **loads** the module at runtime when enabled for an org (same mechani
 
 ## 9. Companion
 
-**GitHub:** `erganis-companion` · **Role:** Mobile app.
+**GitHub:** `erganis-companion` · **Role:** Mobile app for field and on-the-go access.
+
+### Stack (decided)
+
+| Layer | Choice |
+|-------|--------|
+| **Framework** | **React Native** |
+| **Language** | TypeScript |
+| **Maps** | MapLibre (`@maplibre/maplibre-react-native`) — defer to Agora web first unless needed in v1 |
+| **API** | **Core Public API** (generated TypeScript SDK subset) |
+
+Companion is a **native mobile client**, not a web wrapper — separate from Studio’s Next.js stack. Shares contracts and Public API with the platform; does not host business logic (same rule as Studio web: Nest/Core is system of record).
+
+### Use cases
 
 - Consumes **Core Public API** (subset)
-- **Primary use cases:** Planner **Tasks** (daily todo check-off), field access to projects
-- **MapLibre** — defer to Agora web first unless needed in Companion v1
+- **Primary v1:** Planner **Tasks** (daily todo check-off), field access to projects
+- **Later:** additional Public API surfaces as modules expose mobile-eligible routes
+
+### Layout
+
+```
+companion/
+└── app/       # React Native application
+```
 
 ---
 
-## 10. Module catalog
+## 10. Mnemosyne (Lyceum)
+
+**Product name:** **Mnemosyne** · **GitHub:** `erganis-lyceum` · **Path:** `lyceum/` · **Role:** Standalone public website — lean, designer-focused reference for **historical styles** (not a bloated encyclopedia).
+
+### Brand & concept
+
+**Mnemosyne** — Greek muse of **memory** — names what the product is: the memory of design history, available when designers need it on deadline.
+
+The experience is built around what the **Muses** represented (inspiration, craft, and domain knowledge across the arts) and the spirit of the **museum** — curated, trustworthy collections you browse to learn and apply — without becoming a dense academic archive.
+
+**Lyceum** (*lykeion* — the ancient grove and hall of learning, associated with Aristotle’s school) is the **repository folder name**: a place of study, not the consumer-facing brand. In UX: **Mnemosyne**; in the monorepo: `lyceum/`.
+
+| Considered | Outcome |
+|------------|---------|
+| Erganis Historical Styles | Working title — retired |
+| Museion | Contender — shrine of the Muses; mnemonic overlap with “museum” |
+| **Mnemosyne** | **Chosen** — memory, muses, museum-adjacent meaning |
+
+### Vision
+
+Help designers of all forms (interior, architectural, decorative arts) with **specific, actionable** style guidance — era characteristics, motifs, palettes, furniture/forms, do/don't pairings — optimized for **practice**, not academic completeness.
+
+Distinct from **Design** module (firm project creativity) and **Agora** (vendors/products). May cross-link from Studio Design and Presentations as reference.
+
+### Layout
+
+```
+lyceum/
+├── web/       # Public site — Mnemosyne (Next.js + shadcn + Tailwind)
+├── api/       # Optional Nest API + dedicated DB if content volume warrants; else Core-backed
+└── shared/    # Types aligned with Core contracts
+```
+
+### Content & tooling
+
+- Curated style entries (editorial + structured fields) — the “collection”
+- Tags, era, region, related movements
+- **Core Scraper Services** may refresh or suggest external reference metadata where configured (XPath recipes, meta tags)
+- Search and browse tuned for designers on deadline
+
+### Relationship to platform
+
+| Link | Detail |
+|------|--------|
+| **Core** | Contracts, Scraper Services, optional shared auth |
+| **Studio / Design** | Embed or link Mnemosyne style references in exploration work |
+| **Agora** | Separate — vendors/products vs design history |
+
+**Open:** dedicated DB vs Core content store, editorial workflow ([§20](#20-open-questions)).
+
+---
+
+## 11. Module catalog
 
 First-party modules live primarily in `studio/modules/`. **Exception:** Agora org module in `agora/modules/`. Third-party: `studio/modules/third-party/`.
 
@@ -485,7 +680,7 @@ First-party modules live primarily in `studio/modules/`. **Exception:** Agora or
 | **Design** | studio | **Creativity workspace** — spatial/concept exploration, palettes, FF&E intent, adjacency diagrams, room compare; feeds **Presentations** (see [Design catalog](#design)) |
 | **Presentations** | studio | **Customizable client proposals** (approvals, tax options); shareable outputs; embeds Inventory/Design via Core composition classes |
 | **Build** | studio | Drawings, MEP, **light schedules**, **IBC room planner**, **Tags** on drawing sets (optional **Inventory** links); **drawing approval workflow** (uses Core roles/users) |
-| **Business** | studio | Firm operations — **billing, taxes**, **cost verification** |
+| **Business** | studio | Firm operations — **budgeting**, billing, taxes, **cost verification**, CRM/finance (see [Business catalog](#business)) |
 | **Reports** | studio | Cross-module analytics; modules **register data emissions** for Reports to consume |
 | **Agora (org module)** | **agora** | Org-scoped vendors, trade tracking, sync with public Agora catalog |
 
@@ -508,7 +703,7 @@ First-party modules live primarily in `studio/modules/`. **Exception:** Agora or
 - Links to **Notes** (meeting-related email threads).
 - **iCal export/link** for Planner calendar consumption when both modules enabled.
 
-**Email in Core vs module:** **Communications module** owns product behavior (UI, threading, vendor/client linkage). Core may still expose an optional minimal **system mail transport** interface later so apps can send operational email without enabling full Communications — see [§20](#20-core-design--needing-to-discuss-high-priority).
+**Email in Core vs module:** **Communications module** owns product behavior (UI, threading, vendor/client linkage). Core may still expose an optional minimal **system mail transport** interface later so apps can send operational email without enabling full Communications — see [§21](#21-core-readiness--design-backlog).
 
 ### Inventory (includes shipment tracking)
 
@@ -689,15 +884,129 @@ Design is the **creativity area**; Presentations **assembles and delivers** outp
 
 **Build ↔ Inventory:** Tag-to-product links use Public IDs and orchestrator/contracts — Build does not write Inventory tables directly. Inventory may surface “where used on drawings” via registered references.
 
+### Business
+
+**Boundary:** Run the design **firm** from Studio — money, clients, compliance, and project economics. **Deep dive required** before v1 (workshop). Below is an exhaustive **must-have catalog**; phase by user-need ranking ([§1](#feature-prioritization-how-to-read-this-plan)).
+
+**Not Business:** cross-module analytics dashboards → **Reports**; client-facing proposal assembly → **Presentations**; product catalog → **Inventory**.
+
+#### Phased roadmap
+
+| Phase | Focus |
+|-------|--------|
+| **v1** | Project budgets, clients/contacts, cost verification, basic invoicing, tax flags, Business dashboard |
+| **v2** | Full AP/AR, time-to-billing link (Planner), retainers, multi-currency, trust accounts |
+| **Later** | Payroll integrations, advanced job costing, franchise/multi-entity |
+
+#### 1. Budgeting & project economics (priority — needs deep dive)
+
+| Item | Phase | Notes |
+|------|-------|-------|
+| **Project budgets** | v1 | Overall and by category (FF&E, labor, freight, fees) |
+| Budget vs actual | v1 | Roll up from Inventory, Presentations, time (Planner) |
+| **Budget sections / cost codes** | v1 | Align with firm chart of accounts |
+| Contingency & allowances | v1 | % or fixed holdbacks |
+| Change orders (financial) | v2 | Budget revisions with audit trail |
+| Fee structures | v1 | Fixed, % of cost, hourly hybrid, milestone billing |
+| Markup / margin rules | v1 | Tie to **cost verification** and Presentations |
+| Cash flow forecast per project | v2 | Based on schedule + billing milestones |
+| Multi-project firm budget view | v2 | Studio principal oversight |
+
+#### 2. Clients & CRM (firm-facing)
+
+| Item | Phase | Notes |
+|------|-------|-------|
+| Client / company records | v1 | Links to Communications, Notes, Presentations |
+| Contacts & roles | v1 | Billing vs design vs site contact |
+| Project–client relationships | v1 | Multiple clients per project where needed |
+| Client credit / payment terms | v2 | Net-30, deposits required |
+| Lead / pipeline (light) | Later | Optional for firms that track sales |
+
+#### 3. Billing, invoicing & AR
+
+| Item | Phase | Notes |
+|------|-------|-------|
+| Invoices (project & retainer) | v1 | From approved Presentations / milestones |
+| Invoice line items | v1 | Tie to Inventory, fees, expenses |
+| **Tax included / excluded** | v1 | Rules feed **Presentations** proposal options |
+| Sales tax / VAT configuration | v1 | Jurisdiction rules (complexity TBD) |
+| Deposits & progress billing | v2 | % complete, milestone triggers |
+| Accounts receivable aging | v2 | Who owes what |
+| Payment recording | v2 | Manual v1; processor integration later |
+| Credit memos | v2 | |
+
+#### 4. Payables, expenses & AP
+
+| Item | Phase | Notes |
+|------|-------|-------|
+| Vendor bills (link Agora/Inventory vendors) | v2 | |
+| Expense capture | v2 | Receipt attach → Documents |
+| Purchase orders (light) | Later | Tie to Inventory |
+| 1099 / vendor tracking | Later | US tax |
+
+#### 5. Cost verification & pricing integrity
+
+| Item | Phase | Notes |
+|------|-------|-------|
+| **Cost verification** | v1 | Quoted/charged vs cost basis and margin rules |
+| Pre-send proposal checks | v1 | Hook **Presentations** before client send |
+| Cost vs list price (Inventory) | v1 | Catch stale pricing |
+| Margin alerts | v1 | Below threshold warnings |
+| Audit log of price overrides | v1 | Who changed what |
+
+#### 6. Tax & compliance
+
+| Item | Phase | Notes |
+|------|-------|-------|
+| Tax rules engine (basic) | v1 | Rates, exempt items, by locale |
+| Resale / tax-exempt certs | v1 | Link **Documents** |
+| Sales tax reporting prep | v2 | Export for accountant |
+| 1099 / year-end prep | Later | |
+
+#### 7. Accounting integration & exports
+
+| Item | Phase | Notes |
+|------|-------|-------|
+| Chart of accounts mapping | v2 | QuickBooks, Xero, etc. |
+| Export to Excel / CSV | v1 | Adoption path for firms on spreadsheets |
+| Journal entry export | Later | |
+| Bank reconciliation support | Later | |
+
+#### 8. Time, labor & Planner link
+
+| Item | Phase | Notes |
+|------|-------|-------|
+| Billable vs non-billable time | v2 | From **Planner** / Tasks |
+| Labor rates by role | v2 | Tie to Core **users/roles** |
+| Billable hours → invoice | v2 | |
+
+#### 9. Business dashboard (module-owned)
+
+| Item | Phase | Notes |
+|------|-------|-------|
+| Firm financial snapshot | v1 | Revenue, outstanding AR, budget health |
+| Project profitability | v2 | |
+| Widgets in Core **UI toolbox** | v1 | Business-owned; joined analytics → **Reports** |
+
+#### Cross-module links
+
+| Module | Business role |
+|--------|----------------|
+| **Presentations** | Proposals, tax display, pre-send cost verify |
+| **Inventory** | Costs, alternatives pricing, COGS |
+| **Planner** | Time → billing (v2) |
+| **Documents** | Tax certs, signed contracts |
+| **Communications** | Client billing context |
+| **Reports** | Registered financial emissions |
+
 ### Business vs Reports (separate modules)
 
 | | Business | Reports |
 |---|----------|---------|
-| **Purpose** | Firm operations — billing, taxes, **cost verification** | Analytics & dashboards across modules |
+| **Purpose** | Firm operations — **budgeting**, billing, taxes, **cost verification** | Analytics & dashboards across modules |
 | **Dashboards** | Business-owned widgets | Reports-owned widgets |
 | **Data** | Own domain tables | Consumes **registered emissions** from other modules |
 
-- **Cost verification** — ensure quoted/charged amounts are accurate (margin, cost basis, tax treatment). Validates proposal and invoice line items against firm rules; integrates with **Presentations** (pre-send checks) and **Inventory** (cost vs list price). Critical for trustworthy client proposals.
 - Modules that want Reports access expose data via a **registration/emission contract** (manifest TBD). Any app surface may *display* a dashboard widget, but **joined cross-module reporting** flows through Reports.
 
 **Core** provides **UI toolbox** / dashboard **shell/slots**; module content plugs in ([§6](#6-core)).
@@ -713,7 +1022,7 @@ Earlier planning considered a standalone **Tools** module. **Decided:** IBC room
 
 ---
 
-## 11. Module system & manifests
+## 12. Module system & manifests
 
 - **Authoring:** `erganis.module.yaml`
 - **Runtime:** `erganis.module.json` (compiled)
@@ -724,11 +1033,62 @@ On **download, enable, or upgrade**, Core runs:
 - **migrations** — schema extensions
 - **installScripts** — seed data, indexes
 
-Modules may extend surfaces, add validation, contribute UI/workflow/jobs, and **register API routes** (see [§13](#13-api-layers--contracts)). Must **not** mutate another module's storage directly.
+Modules may extend surfaces, add validation, contribute UI/workflow/jobs, and **register API routes** (see [§14](#14-api-layers--contracts)). Must **not** mutate another module's storage directly.
 
 Third-party modules: `studio/modules/third-party/`. First-party Agora org module: `agora/modules/`.
 
-**Planned manifest contribution:** `contributions.api` — OpenAPI fragment, route prefix, audience (`surface` | `public`), and required permissions. Not yet in schema; example manifest covers surfaces/operations/jobs/ui only.
+**Planned manifest contribution:** `contributions.api` — OpenAPI fragment, route prefix, audience (`surface` | `public`), and required permissions. **v0 shape decided** — see [§22 kickoff reference](#22-core-kickoff-decisions-reference).
+
+### Module packaging & placement (decided)
+
+| Concern | Decision |
+|---------|----------|
+| **First-party modules** | `studio/modules/` only (enforced by loader + tooling) |
+| **Third-party modules** | `studio/modules/third-party/` only |
+| **Agora org module** | `agora/modules/` |
+| **Dev resolution** | Path config (`ERGANIS_MODULE_PATHS`) loads compiled module entry points from allowed directories |
+| **Installed resolution** | Same path rules **or** package artifacts from **any** registry (npm, NuGet, etc.) — Core loader is **package-ecosystem agnostic**; Node modules install to Node-required locations; other ecosystems use their own layout |
+| **Third-party data** | Third-party modules integrate primarily via **APIs and orchestration** — not shared first-party tables |
+| **Developer tooling** | `core/tools/` — contract-aware generators, **orchestration mapping config**, linkable public contracts for module authors; plugs into **Studio** and orchestrator configuration UIs |
+
+Core libraries **discover, validate, and plug in** modules for Erganis-hosted apps. Developers may use Core libraries differently (e.g. external mobile app calling Public API only) — that path is supported via **contract-first API clients**, not mandatory module hosting.
+
+### Module inheritance (decided — [§22 P37](#p37-module-inheritance))
+
+**Module inheritance** (third-party replaces/extends a first-party module slot) is **deferred** — no current product need. Integration uses **public contracts**, **orchestrator steps**, and **Core-owned mapping tooling** instead.
+
+| Item | Decision |
+|------|----------|
+| **Inheritance** | **Not planned for v1/v2** unless a concrete customer need appears later |
+| **Public IDs** | **Invariant** — stable across integrations; modules and Surfaces link by Public ID + contract; no silent breakage on disable or third-party hooks |
+| **Contract validation** | **Core owns** validation at boundaries (envelope, API, Surface load); **modules own** domain implementation that satisfies contracts |
+| **Contracts** | Defined in `core/contracts/`; implementations are module-specific; Studio/tools expose **linkable** contract surfaces when authoring modules |
+| **Mapping config** | **Core-owned tool** (`core/tools/` + runtime reader) — optional declarative field/step mapping between contracts; configurable; consumed by **Studio** and any UI that edits orchestrator configuration |
+| **v1 admin UX** | **Granular disable** of specific `contributions.*` + **dependency graph** warning on module disable (already decided) |
+| **Third-party integration** | API + optional orchestrator steps — not replacing first-party module identity |
+
+### Database layout (decided)
+
+| Layer | Convention |
+|-------|------------|
+| **Per module** | PostgreSQL **schema per module** — e.g. `inventory.products`, `build.drawings` |
+| **Per org (preferred)** | Org-scoped data under org-delineated namespaces within module schemas (e.g. `inventory.org_{orgKey}.…` or `org_{orgKey}.inventory.…` — exact naming at scaffold) |
+| **First vs third party** | First-party module schemas hold firm data; third-party extensions use separate schemas or API-only integration — avoids commingling tables |
+| **Core platform** | `core` schema (or `platform`) for users, orgs, roles, operation log, module enablement |
+
+Migrations run per module on enable/upgrade via Core migrator.
+
+### Cross-module data references (decided)
+
+| Rule | Detail |
+|------|--------|
+| **Within module** | Normal relational model — internal PKs, FKs, indexes |
+| **Across modules** | **Public ID** columns (indexed), orchestrator steps, or HTTP — **no cross-schema FKs** |
+| **Third-party own data** | May use **own schema + migrations** for sync logs, mappings, cache |
+| **Third-party → first-party** | Public IDs + envelope/API only — never `INSERT` into first-party schemas |
+| **Performance** | Index `(org_id, *_public_id)` on reference columns; batch ID lookups for lists |
+
+See [§13 orchestrator transaction library](#orchestrator-transaction-library-decided).
 
 ### How NestJS modules work here (plain language)
 
@@ -752,7 +1112,7 @@ studio/modules/inventory/
 │   └── ui/                    # React components for Studio slots
 ```
 
-**Cross-repo note:** Most modules live in `studio/`; Agora org module lives in `agora/modules/`. Core must resolve module paths at deploy time (monorepo paths, installer cache, or published packages) — **design in [§20](#20-core-design--needing-to-discuss-high-priority)**.
+**Cross-repo note:** Most modules live in `studio/`; Agora org module lives in `agora/modules/`. Core must resolve module paths at deploy time (monorepo paths, installer cache, or published packages) — **design in [§21](#21-core-readiness--design-backlog)**.
 
 ### Orchestration — not "virtual associates," but the same idea
 
@@ -762,7 +1122,7 @@ We are **not** using a product term "virtual associates." Practically:
 - Each **step** calls **one module's handler** in order — like asking specialists in sequence.
 - Modules pass **Public IDs and contract-shaped data** only; they never touch another module's database.
 
-Orchestration **solves coordination** (who runs when, locks, rollback). It does **not** solve **packaging** (where module code lives on disk) or **UI loading** (how Next.js imports React components) — those are separate design items in §20.
+Orchestration **solves coordination** (who runs when, locks, rollback). It does **not** solve **packaging** (where module code lives on disk) or **UI loading** (how Next.js imports React components) — those are separate design items in §21.
 
 ### Read vs write policy (decided)
 
@@ -803,7 +1163,7 @@ Inventory does **not** call Finance's tables. Finance receives `{ productPublicI
 2. Core orchestrator or Surface runtime calls each contributing module's **load** handler (read-only steps or dedicated loaders).
 3. Response merges fields: Planner tasks, Document links, Design room list — one composed JSON for the UI.
 
-**Open design item:** exact `load` composition API ([§20](#20-core-design--needing-to-discuss-high-priority)).
+**Open design item:** exact `load` composition API ([§21](#21-core-readiness--design-backlog)).
 
 #### Example 4 — Approve drawing revision (Build)
 
@@ -858,11 +1218,11 @@ Plain-language summary of what the manifest will eventually declare beyond today
 | `reports` (planned) | Data emissions for Reports module |
 | `migrations` | DB tables this module owns |
 
-Full schema work is **deferred** until Core design workshop ([§20](#20-core-design--needing-to-discuss-high-priority)).
+Full schema work is **deferred** until Core design workshop ([§21](#21-core-readiness--design-backlog)).
 
 ---
 
-## 12. Operation envelope & orchestration
+## 13. Operation envelope & orchestration
 
 **Priority contract** for all significant mutations.
 
@@ -891,13 +1251,64 @@ interface OperationEnvelope {
 
 Steps carry `failureClass`: `required` | `optional` | `advisory`. Optional steps support **retry**; exhausted retries recorded — no silent drift.
 
+**Action enum (decided):** full set from day one — `load` | `save` | `draft` | `archive` | `approve` | `sync`. Note: **`load` on Surface read path** typically uses the Surface composition API (parallel module loaders); envelope `load` remains available for orchestrated read workflows where needed.
+
+### Partial vs full failure (decided — [§22 P35](#p35-envelope-partial-success-vs-full-failure))
+
+**Hybrid rollback:** required **`phase: db`** steps share **one PostgreSQL transaction** per operation (orchestrator-managed). Optional/advisory and external steps run **`post_commit`** — failures produce warnings, not rollback of required work. **`outcome`:** `success` | `partial` | `failed`. HTTP: **200** for `success`/`partial`, **422** for `failed`. **409** remains lock/`expectedVersion` conflicts only.
+
+Module authors **do not** open/commit transactions themselves for envelope steps — see **Orchestrator transaction library** below.
+
+### Orchestrator transaction library (decided)
+
+Core **`core/packages/`** (orchestration + persistence helpers) provides transaction scope so module developers **never hand-roll** `BEGIN`/`COMMIT` for envelope steps:
+
+| Capability | Responsibility |
+|------------|----------------|
+| **`OperationContext`** | Injected into every step handler: `orgId`, `operationId`, `entityPublicId`, `entityVersion`, authenticated user |
+| **`DbUnitOfWork` / `TransactionScope`** | Orchestrator opens one txn for all **`phase: db`** + **`failureClass: required`** steps; passes a shared client/repository factory to handlers |
+| **Module repositories** | Handlers call DAL methods bound to the injected scope — writes only against **own module schema** |
+| **Phase enforcement** | `phase: db` steps run inside scope; `phase: post_commit` runs after successful commit |
+| **Rollback** | Any required step failure → orchestrator **ROLLBACK** — handlers do not catch-and-commit independently |
+| **Compensators (v1 optional)** | For rare post_commit undo paths; manifest-declared; not required for v0 |
+
+**Developer rule:** Step handlers are **pure domain logic on an injected unit of work**. Cross-module references use **Public IDs** (indexed columns) — not cross-schema FKs or cross-module SQL. Integrity across modules is enforced by orchestrator + contracts, not PostgreSQL FKs between schemas.
+
+**Manifest step fields (v0):**
+
+```yaml
+steps:
+  - module: inventory
+    handler: saveProduct
+    failureClass: required
+    phase: db
+  - module: business
+    handler: updateCost
+    failureClass: optional
+    phase: post_commit
+    maxRetries: 2
+    onExhaustedRetries: warn   # warn | escalate_to_failed
+```
+
+**v1 constraint:** **`failureClass: required`** steps must use **`phase: db`** only.
+
+### HTTP operation response (decided)
+
+| `outcome` | HTTP | When |
+|-----------|------|------|
+| `success` | 200 | All required steps OK; no optional/advisory warnings |
+| `partial` | 200 | All required OK; one or more optional/advisory warnings |
+| `failed` | 422 | Any **required** step failed; DB txn rolled back |
+
+Response body includes `steps[]` (`status`, `message`, optional `code`) and top-level `warnings[]` so Experience layers and module authors can implement custom UX.
+
 ### Lock acquisition
 
 Pessimistic lock on entity + version during active workflow. Concurrent edits → `409 Conflict`.
 
 ### Cross-module interaction
 
-Modules hook through orchestrator step I/O and contract events — **Public IDs only** in envelope. No cross-module SQL.
+Modules hook through orchestrator step I/O and contract events — **Public IDs only** in envelope. No cross-module SQL. Reference columns (e.g. `product_public_id`) are **indexed** within each module schema; cross-module integrity is **contract + orchestrator**, not cross-schema FKs. Hot paths use module-local queries and batch Public ID lookups — not live JOINs across module schemas.
 
 ### Examples
 
@@ -922,7 +1333,7 @@ sequenceDiagram
 
 ---
 
-## 13. API layers & contracts
+## 14. API layers & contracts
 
 | API | Consumers |
 |-----|-----------|
@@ -988,7 +1399,7 @@ flowchart TB
 
 ---
 
-## 14. Technology stack
+## 15. Technology stack
 
 ### Decided
 
@@ -997,7 +1408,7 @@ flowchart TB
 | **Server** | **NestJS**, TypeScript, PostgreSQL 16, pg-boss |
 | **Web client** | **Next.js**, React, TypeScript, **shadcn/ui**, **Tailwind CSS** |
 | **Desktop client** | **Same Studio build** as web; local replica + sync (shell TBD) |
-| **Mobile** | React Native, TypeScript, MapLibre (Companion) |
+| **Mobile (Companion)** | **React Native**, TypeScript, MapLibre |
 
 ### Stack table
 
@@ -1006,6 +1417,7 @@ flowchart TB
 | Experience | Studio designer + client | React, Next.js, TS, shadcn/ui, Tailwind | `studio/shared` |
 | Experience | Studio desktop | Same UI build; local DB + sync layer | `studio/apps/studio` + `studio/shared` |
 | Experience | Agora web | Next.js, React, TS, shadcn/ui, Tailwind | `agora/web` |
+| Experience | Mnemosyne (Lyceum web) | Next.js, React, TS, shadcn/ui, Tailwind | `lyceum/web` |
 | Experience | Companion | React Native, TypeScript, MapLibre | `companion/` |
 | UI icons | Icon assets | Lucide (TBD); separate static host | CDN / asset URL |
 | Surface | Surface runtime | TypeScript in Core | Surface contract |
@@ -1023,6 +1435,65 @@ flowchart TB
 | Identity | Auth | Core Nest, org RBAC | All apps |
 | Composition | Overrides | Core PostgreSQL | Composition API |
 | Tooling | Updater | `core/scripts/` | CLI |
+
+### Stack tier → repository map
+
+Use this table to decide **which repo owns what**. Rows follow **stack order** (Experience → Persistence → Jobs). **Building block** rows are shared libraries or assets that support a layer but are not a vertical tier themselves. **Core libraries** (last rows) summarize where platform building blocks live in `erganis-core`.
+
+**Reference rows** as **§15 map #N** (e.g. §15 map #12 = Agora service). Core kickoff resolutions: [§22 kickoff](#22-core-kickoff-decisions-reference).
+
+| # | Stack tier / role | Repo (path) | Decided | Open questions |
+|---|-------------------|-------------|---------|----------------|
+| 1 | **Experience** — Studio designer app | `studio/` (`apps/studio/`) | **Next.js**, React, **TypeScript**, **shadcn/ui**, **Tailwind CSS**. Web-first; same build targets desktop shell. Consumes Core **Surface API** (or generated TS SDK). UI only — **not** system of record ([§19](#19-resolved-decisions)). | Desktop shell: **Electron vs Tauri vs other** ([§20](#20-open-questions) #29). Offline scope and conflict UX ([§20](#20-open-questions) #30, [§21](#21-core-readiness--design-backlog)). |
+| 2 | **Experience** — Client portal | `studio/` (`apps/client/`) | Same stack as Studio (`studio/shared/`). Shares **Core PostgreSQL** via Surface API — same data model, different roles/layouts. | RBAC split, allowed envelope actions, concurrency ([§20](#20-open-questions) #8). |
+| 3 | **Experience** — Studio desktop offline | `studio/` (`apps/studio/` + `shared/`) | **Same UI build** as web; **local replica** + sync queue when disconnected; pushes/pulls Core when online. Designers must not be blocked by server outages ([§7](#7-studio)). | Sync protocol, version vectors, conflict **compare + resolve** UI ([§21](#21-core-readiness--design-backlog) H). Core **Sync API** shape ([§18](#18-feature-backlog)). |
+| 4 | **Experience** — Erganis Agora (public site) | `agora/` (`web/`) | **Next.js**, React, TypeScript, shadcn/ui, Tailwind — same web pattern as Studio. Consumes **Agora API** (not Core DB directly). **MapLibre** for vendor map. | Agora ↔ Core sync conflict rules ([§20](#20-open-questions) #2). |
+| 5 | **Experience** — Mnemosyne (public site) | `lyceum/` (`web/`) | **Next.js**, React, TypeScript, shadcn/ui, Tailwind. Brand **Mnemosyne**; folder **`lyceum/`**, repo **`erganis-lyceum`**. Lean style-reference browse/search. | Dedicated Lyceum DB vs Core content store; editorial workflow ([§20](#20-open-questions) #32). |
+| 6 | **Experience** — Companion (mobile) | `companion/` (`app/`) | **React Native**, **TypeScript**. Consumes **Core Public API** only — native client, not a web wrapper; no hosted business logic. **MapLibre** when maps ship. | Maps in v1 vs defer to Agora web ([§20](#20-open-questions) #4). Which Public API surfaces ship first. |
+| 7 | **Building block** — Shared web UI & API clients | `studio/` (`shared/`) | shadcn/ui components, Tailwind tokens, Surface/Public API clients, **sync layer** for desktop. Swap boundary for all Studio web experiences. | Module UI import strategy (build-time vs dynamic) affects third-party modules ([§20](#20-open-questions) #24). |
+| 8 | **Building block** — Icon assets | External static host | Free vector set (e.g. **Lucide** — TBD). **Not** bundled in app repos. | Self-hosted vs CDN; Lucide vs Tabler vs Phosphor ([§20](#20-open-questions) #6). |
+| 9 | **Building block** — Drawing viewers | `studio/` (Experience) | Files in Core **FileStore**; **viewers render in Studio** (selectively Client). Approvals via operation envelope + locks. | 2D DXF vs BIM first; spike options in [§17](#17-explorations--spikes) — not final. |
+| 10 | **API** — Core Surface API | `core/` (`services/`) | **NestJS**, TypeScript. Primary gateway for Studio apps and **external apps** integrating with an org instance. Org-scoped RBAC. | Org **API composer** — merge enabled-module routes/OpenAPI ([§21](#21-core-readiness--design-backlog) E). Disabled-module response shape ([§20](#20-open-questions) #20). |
+| 11 | **API** — Core Public API | `core/` (`services/`) | NestJS subset of Core OpenAPI (`x-audience: public`). JWT after OIDC/session or API key exchange (keys TBD). | External **API keys** shape ([§20](#20-open-questions) #19) |
+| 12 | **API** — Agora service | `agora/` (`api/`) | **NestJS**, TypeScript. Own OpenAPI; serves public vendor catalog and vendor portal flows. | Nest module breakdown (`VendorModule`, `SearchModule`, `SyncModule`) — planned, not fully specced. |
+| 13 | **API** — Lyceum service (optional) | `lyceum/` (`api/`) | **NestJS** if content volume warrants a dedicated service; else Mnemosyne reads Core-backed APIs. | Whether `lyceum/api/` is needed at all ([§10](#10-mnemosyne-lyceum)). |
+| 14 | **Surface** — Surface runtime & contracts | `core/` (`services/` + `contracts/`) | **Surface** = workflow boundary (Product, Project, PO) — not a page. TypeScript runtime in Core; save/load semantics. Writes route to orchestrator; reads may use composed **`load`**. | **`load` composition** API for multi-module screens ([§21](#21-core-readiness--design-backlog) D). Draft vs save vs approve semantics ([§21](#21-core-readiness--design-backlog) A). |
+| 15 | **Orchestration** — Operation envelope & workflow | `core/` (`services/` + `packages/`) | **NestJS** `OrchestratorModule`, `WorkflowModule`. **Hybrid rollback** — orchestrator-managed shared txn for required `phase: db` steps; `DbUnitOfWork` in `core/packages/`. **Trigger classes** + **event handlers**. ([§13](#13-operation-envelope--orchestration)) | Envelope **JSON Schema** + worked specs (Save Product, drawing approve) |
+| 16 | **Orchestration** — Module Contract API (internal) | `core/` + module repos | Core runtime ↔ module **step handlers** — not public HTTP. Modules pass **Public IDs** and contract-shaped data only. | — (direction set; implement with envelope v0). |
+| 17 | **Module domain** — First-party Studio modules | `studio/` (`modules/`) | **Nest dynamic modules** loaded by Core: handlers, HTTP routes, jobs, migrations. Each module **owns its tables** and domain rules. YAML manifest → JSON at build ([§12](#12-module-system--manifests)). | Module **packaging** — monorepo paths vs published packages ([§21](#21-core-readiness--design-backlog) B). Table naming: prefix vs schema-per-module. Per-module product scope (e.g. Business budgeting v1) ranked by user need. |
+| 18 | **Module domain** — Third-party modules | `studio/` (`modules/third-party/`) | Same mechanism as first-party; marketplace path for external authors. | UI loading and signing/trust model ([§20](#20-open-questions) #24). |
+| 19 | **Module domain** — Agora org module | `agora/` (`modules/`) | Org-scoped vendors, trade tracking, sync with public Agora. **Source repo is Agora**, not Studio — Core still loads at runtime when enabled ([§8](#8-erganis-agora)). | Trade sync vs public field ownership ([§20](#20-open-questions) #2). |
+| 20 | **Building block** — Module UI contributions | Module repo (`…/ui/`) + `studio/shared/` | Modules contribute **React** components into Core **UI toolbox** slots; Studio **Experience** renders assembled shell (Next + shadcn). | Build-time workspace graph vs dynamic imports for third-party UI ([§21](#21-core-readiness--design-backlog) F). |
+| 21 | **Building block** — Module-extended HTTP routes | Module repo + Core loader | Enabled modules **register** Surface/Public routes; Core **merges** OpenAPI per org ([§14](#14-api-layers--contracts)). | `contributions.api` manifest shape ([§20](#20-open-questions) #20). SDK: composed spec vs core + module packages ([§20](#20-open-questions) #21). |
+| 22 | **Persistence** — Core database | `core/` (`data/` + `services/`) | **PostgreSQL 16**. DAL interfaces; migrations in `data/`. **Source of truth** for org/project/module data on Core. Studio + Client share this DB via API. | Engagement model details for Studio + Client ([§20](#20-open-questions) #8). |
+| 23 | **Persistence** — Agora database | `agora/` (`api/` + data layer) | **PostgreSQL 16**. Separate large public vendor catalog; sync jobs to Core via **pg-boss**. | Sync lag handling; conflict policy ([§20](#20-open-questions) #2). |
+| 24 | **Persistence** — Lyceum database (optional) | `lyceum/` or Core | TBD — dedicated PostgreSQL if content volume warrants; else Core-backed store. | DB vs Core store ([§20](#20-open-questions) #32). |
+| 25 | **Persistence** — Studio desktop local replica | `studio/` (`apps/studio/` + `shared/`) | Local store for offline designer work; not authoritative — **Core PostgreSQL** wins after sync + conflict resolve. | Entity versioning strategy; which entities replicate offline ([§21](#21-core-readiness--design-backlog) H). |
+| 26 | **Jobs & events** — Job runner | `core/` (`services/`) | **pg-boss** on PostgreSQL. Modules register workers via manifest. **Redis deferred** v1 ([§15](#15-technology-stack)). | — |
+| 27 | **Jobs & events** — Event outbox | `core/` (`services/`) | PostgreSQL outbox + poller (`OutboxModule`, `EventModule`). Distinct from synchronous orchestrator steps. | Event contract shapes for cross-module notifications — flesh out with envelope v0. |
+| 28 | **Jobs & events** — Core ↔ Agora sync | `core/` + `agora/` | Background sync workers; proposed rule: Agora wins **public vendor fields**, Studio wins **org trade status**. | Confirm conflict rule ([§20](#20-open-questions) #2). |
+| 29 | **Jobs & events** — Scraper Services | `core/` (`services/ScraperModule`) | Modular scrape **recipes** (URL, XPath, headers, meta tags); pg-boss jobs. Consumers: Agora, Mnemosyne, future. Infrastructure — not Studio modules. | Legal/ToS, rate limits, scraped content storage ([§20](#20-open-questions) #33). |
+| 30 | **Cross-cutting** — Contracts & schemas | `core/` (`contracts/`) | **OpenAPI-first**; JSON Schema for data. Core OpenAPI source of truth; Public API subset; module manifest schema + YAML→JSON compile. **Hand-written SDKs do not live in app repos.** | Multi-language SDK pipeline — TS, C#, Java ([§20](#20-open-questions) #5). Codegen tool, publish, semver coupling. |
+| 31 | **Cross-cutting** — Identity & RBAC | `core/` (`services/AuthModule`) | **Users, orgs, roles in Core.** **OIDC v1** primary SSO; minimal **local** fallback; **domain JIT**; **SAML-ready** `AuthProvider` (SAML deferred); **session** (Studio/Client web) + **JWT** (Public API / Companion); **admin** default; **custom permission roles** defined in Studio. Modules reference users by **Public ID**. ([§6 Authentication](#authentication-decided--22-p36-sso-org-login-vs-communications-oauth)) | Public API **API keys**; Build/client portal permission matrix ([§21](#21-core-readiness--design-backlog) C) |
+| 32 | **Cross-cutting** — Composition & UI toolbox | `core/` (`services/CompositionModule`) | Core defaults → module defaults → org overrides → runtime. **UI toolbox**: layout regions, nav shell, slot registry, theme tokens. **Composition interfaces** for cross-module embeddable blocks. | Composition **class catalog** ([§20](#20-open-questions) #27). Reports data-emission manifest ([§20](#20-open-questions) #25). |
+| 33 | **Cross-cutting** — Files | `core/` (`services/FileModule`) | **LocalFileStore** v1 under `ERGANIS_DATA_ROOT`; S3 adapter later behind same interface. | — |
+| 34 | **Cross-cutting** — Search | `core/` (`services/SearchModule`) | **PostgreSQL full-text** v1; dedicated engine (e.g. Meilisearch) later via adapter. Persistence = truth; search = findability. | — |
+| 35 | **Cross-cutting** — Maps (geo) | `agora/web`, `companion/` | **MapLibre** — web: `maplibre-gl`; mobile: `@maplibre/maplibre-react-native`. Free tiles (OpenFreeMap / self-hosted OSM). | Companion maps in v1 ([§20](#20-open-questions) #4). |
+| 36 | **Cross-cutting** — Email | `studio/modules/communications/` (+ optional Core transport) | **Communications module** owns email UX and vendor/client correspondence ([§20](#20-open-questions) #9). iCal feeds **Planner**. | Optional Core **EmailTransport** for system mail vs Communications-only ([§20](#20-open-questions) #26). |
+| 37 | **Cross-cutting** — External tool bridges | Module repos + Experience | Export/import/connect patterns (Excel, CSV, Pinterest, Instagram, etc.) declared per module; adoption path for legacy workflows ([§7](#7-studio)). | Per-module export/import manifest shape (TBD). |
+| 38 | **Cross-cutting** — Deploy & tooling | `core/` (`infrastructure/`, `scripts/`) | **Windows and Linux native**; Docker optional for local Postgres only. **Updater / installer / migrator** for self-hosted deployments; module migrations on enable. | — |
+| 39 | **Core library** — `contracts/` | `core/` | Schemas, OpenAPI, module manifest tooling, **SDK generation** output (`contracts/sdk/`). Single contract source for all repos. | SDK strategy ([§20](#20-open-questions) #5, #21). |
+| 40 | **Core library** — `packages/` | `core/` | Shared **TypeScript** libraries: domain types, DAL interfaces, envelope helpers, platform errors — **no Nest runtime** in pure packages. Building blocks for `services/` and module authors. | Package breakdown (names, boundaries) — convention TBD at scaffold time. |
+| 41 | **Core library** — `data/` | `core/` | SQL migrations, DAL implementations, PostgreSQL-specific persistence code. | Table ownership convention for module tables ([§21](#21-core-readiness--design-backlog) B). |
+| 42 | **Core library** — `services/` | `core/` | **NestJS** application — layered server template: API controllers, orchestration, platform domain, infrastructure adapters. Hosts Core Nest modules ([§6](#6-core)). | Layered folder naming inside Nest app — align at scaffold ([§21](#21-core-readiness--design-backlog)). |
+| 43 | **Core library** — `infrastructure/` | `core/` | Deploy configs, Docker Compose (optional), env examples — runtime hosting, not business logic. | — |
+| 44 | **Core library** — `scripts/` | `core/` | Setup, migrate, update, dev CLI — updater/installer/migrator entry points. | — |
+| 45 | **Core library** — Generated SDKs | `core/` (`contracts/sdk/`) | TypeScript (first); C#/Java planned. Consumed by Studio, Companion, external apps — **not** hand-maintained in app repos. | Composed vs baseline+module packages ([§20](#20-open-questions) #21). |
+| 46 | **Shared library** — Studio | `studio/` (`shared/`) | Web UI kit + API clients + desktop sync — **not** Core; Experience building blocks only. | — |
+| 47 | **Shared library** — Agora | `agora/` (`shared/`) | Types and clients aligned with Agora API contracts. | — |
+| 48 | **Shared library** — Lyceum | `lyceum/` (`shared/`) | Types aligned with Core / optional Lyceum API contracts. | — |
+
+**Naming reminder:** **Experience** = client apps only (Next.js / React Native). Do not label Nest controllers inside `core/services/` as Experience — that is the **API** tier. **Business** (capital B) is a **module name**, not a stack tier; domain rules live in **Module domain** (server-side Nest).
 
 ### PostgreSQL vs Redis
 
@@ -1049,10 +1520,11 @@ Web: `maplibre-gl` + free tiles (OpenFreeMap / self-hosted OSM). Mobile: `@mapli
 
 ---
 
-## 15. Cross-cutting platform capabilities
+## 16. Cross-cutting platform capabilities
 
 | Capability | Notes |
 |------------|-------|
+| **Scraper Services** | Modular web scrape recipes (URL, XPath, headers, meta) — Agora, Mnemosyne, future consumers |
 | **Studio offline & sync** | Desktop local replica; sync to Core; **conflict resolution** when same entry changed in two places |
 | **External tool bridges** | Export/import/connect to Excel, Pinterest, Instagram, and similar — adoption path for legacy workflows |
 | **Feature iteration ranking** | Prioritize implementation by **biggest user needs** (see [§1](#1-document-governance--apm)); backlogs are exhaustive, delivery order is ranked separately |
@@ -1068,7 +1540,7 @@ User → Surface → Operation envelope → Orchestrator (lock) → Module steps
 
 ---
 
-## 16. Explorations & spikes
+## 17. Explorations & spikes
 
 ### Architecture drawing viewers
 
@@ -1096,9 +1568,31 @@ User → Surface → Operation envelope → Orchestrator (lock) → Module steps
 
 ---
 
-## 17. Feature backlog
+## 18. Feature backlog
 
 > **Prioritization:** Items below are captured ideas — **not** delivery order. Rank each iteration by **biggest user needs** before scheduling ([§1](#feature-prioritization-how-to-read-this-plan)).
+
+### Core — initial implementation (P38 — in progress)
+
+Phases **0–3** — see [§6 Initial Core implementation scope](#initial-core-implementation-scope-decided--22-p38-first-core-vertical-slice):
+
+- [ ] **Phase 0** — Nest shell, Postgres, layered `core/services/` + `core/packages/`
+- [ ] **Phase 1** — OIDC + local fallback, session, JWT, org, custom roles
+- [ ] **Phase 2 (3C)** — Module loader + hello-world stub + authenticated envelope smoke test
+- [ ] **Phase 3 (3A)** — **Documents** module (`studio/modules/documents/`) — upload, vault, envelope save
+- [ ] **Follow-on module slice** — Inventory Save Product (`studio/modules/inventory/`) — multi-step optional `post_commit` (not Core)
+
+### Test plan (decided — [§22 P39](#p39--core-test-plan))
+
+- [x] **Tooling locked** — Jest (Core, Nest, web, RN); Testing Library for UI
+- [x] **DB** — Testcontainers (local) + Postgres service container (GitHub Actions CI)
+- [x] **CI** — build + test steps in `.github/workflows/ci.yml` from Phase 0
+- [ ] Generate **TEST_STRATEGY** (APM template) when Phase 0 scaffold exists
+- [ ] Auth tests — OIDC mock, domain JIT, local fallback, session, JWT
+- [ ] Orchestrator tests — txn rollback, `outcome: partial` vs `failed`, 409 lock conflict
+- [ ] Module loader tests — enable/disable, manifest compile, migrations stub
+- [ ] Documents module integration tests — envelope save, FileStore paths
+- [ ] Stub module envelope smoke (Phase 2)
 
 ### Platform / Studio
 - [ ] Studio **desktop** shell — same build as web
@@ -1140,7 +1634,7 @@ User → Surface → Operation envelope → Orchestrator (lock) → Module steps
 
 ### Design
 
-Full catalog: [§10 Design](#design). Phased backlog:
+Full catalog: [§11 Design](#design). Phased backlog:
 
 **v1**
 - [ ] Spaces / rooms, zones, design phases
@@ -1181,10 +1675,30 @@ Full catalog: [§10 Design](#design). Phased backlog:
 - [ ] Drawing approval pipeline (Core roles for approvers)
 
 ### Business
-- [ ] Billing, taxes, firm operations
-- [ ] **Cost verification** — quoted/charged vs cost basis and margin rules
-- [ ] Pre-send validation hooks for Presentations proposals
-- [ ] Business-owned dashboards
+
+Full catalog: [§11 Business](#business). Phased backlog — **budgeting deep dive required**:
+
+**v1**
+- [ ] **Project budgets** — overall + by category/cost code
+- [ ] Budget vs actual (Inventory, Presentations rollups)
+- [ ] Contingency & allowances; fee structures; markup/margin rules
+- [ ] **Cost verification** + Presentations pre-send checks
+- [ ] Client/company & contacts (CRM light)
+- [ ] Invoices, line items, tax included/excluded
+- [ ] Sales tax / VAT rules (basic)
+- [ ] Excel/CSV export
+- [ ] Business dashboard widgets
+
+**v2**
+- [ ] AR aging, deposits, progress billing, payment recording
+- [ ] AP, expenses, vendor bills
+- [ ] Change orders (financial); multi-project firm view
+- [ ] Billable time from Planner; labor rates
+- [ ] Chart of accounts / accounting export (QuickBooks, Xero)
+- [ ] Cash flow forecast; project profitability
+
+**Later**
+- [ ] Payroll integrations, POs, bank recon, 1099/year-end, leads pipeline
 
 ### Reports
 - [ ] Cross-module report definitions
@@ -1193,12 +1707,22 @@ Full catalog: [§10 Design](#design). Phased backlog:
 
 ### Agora org module (`agora/modules/`)
 - [ ] Org vendor list, trade tracking, background vendor match
+- [ ] Profile enrichment via Core **Scraper Services** (website link + XPath)
+
+### Mnemosyne (`lyceum/`)
+- [ ] Submodule stub (`lyceum/web`, optional `api/`, `shared/`)
+- [ ] Lean style reference content model (era, motifs, palettes, pairings)
+- [ ] Public browse/search site — **Mnemosyne** branding (Next.js + shadcn)
+- [ ] Integration with Core **Scraper Services** for external reference metadata
+- [ ] Cross-links from Studio **Design** module
+- [ ] DB strategy + editorial workflow (workshop)
 
 ### Erganis Agora (web)
 - [ ] Public vendor search, profiles, MapLibre map
 
 ### Core
 - [ ] Updater, installer, migrator (incl. module DB migrations)
+- [ ] **Scraper Services** — modular recipes (URL, XPath, headers, meta tags); pg-boss jobs
 - [ ] Visual themes, **UI toolbox**, composition shell
 - [ ] **Trigger classes** and workflow routing
 - [ ] **Event handlers** (outbox, lifecycle, cross-module)
@@ -1219,13 +1743,13 @@ Full catalog: [§10 Design](#design). Phased backlog:
 
 ---
 
-## 18. Resolved decisions
+## 19. Resolved decisions
 
 | Area | Decision |
 |------|----------|
 | Ecosystem name | **Erganis Platform** |
 | Base layer | **Core** (`core/`, `erganis-core`) |
-| Submodules | `core/`, `studio/`, `agora/`, `companion/` |
+| Submodules | `core/`, `studio/`, `agora/`, `companion/`, `lyceum/` |
 | Studio apps | `apps/studio/`, `apps/client/`; `modules/`; `modules/third-party/` |
 | Public vendor site | **Erganis Agora**; avoid "marketplace" in UX |
 | Agora architecture | Separate Agora API + DB; sync jobs; **org module in `agora/modules/`** |
@@ -1236,6 +1760,10 @@ Full catalog: [§10 Design](#design). Phased backlog:
 | Studio + Client data | Same Core PostgreSQL (**engagement model TBD**) |
 | Module install | DB migrations on enable via Core migrator |
 | Studio UI | Next.js + shadcn/ui + Tailwind in `studio/shared/` |
+| Business scope | **Budgeting**, billing, taxes, cost verification, CRM/finance — full catalog §11; deep dive TBD |
+| Scraper Services | **Core** — modular URL/XPath scrape recipes; Agora, Mnemosyne, future |
+| Mnemosyne | Product name; repo **`erganis-lyceum`**, path **`lyceum/`** — historical styles reference |
+| Companion | **React Native** + TypeScript; Core Public API |
 | Icons | Hosted separately from code repos |
 | Schemas | OpenAPI-first; JSON Schema for data |
 | Permissions | Org-scoped RBAC |
@@ -1260,11 +1788,28 @@ Full catalog: [§10 Design](#design). Phased backlog:
 | Presentations | Customizable client proposals; tax options; Inventory alternatives via composition classes |
 | Business cost verify | **Cost verification** for accurate charging; ties to proposals and Inventory |
 | Inventory alternatives | Grouped product options (price, lead time) embeddable in Presentations |
-| Design scope | Full phased catalog in §10 — creativity/intent; not client delivery or construction docs |
+| Design scope | Full catalog in §11 — creativity/intent; not client delivery or construction docs |
+| **Core kickoff — module loader** | Path config v1 + **multi-registry packages** (npm, NuGet, …); first-party `studio/modules/`, third-party `studio/modules/third-party/`; `core/tools/` contract generators |
+| **Core kickoff — DB layout** | **Schema per module** + org delineation; third-party via API/orchestration, separate from first-party tables |
+| **Core kickoff — Public IDs** | Prefixed **ULID**: `{type}_{ulid}` (e.g. `prod_01J…`) |
+| **Core kickoff — envelope actions** | Full action enum: `load`, `save`, `draft`, `archive`, `approve`, `sync` |
+| **Core kickoff — lock conflicts** | Concurrent edit → **409 Conflict** (`expectedVersion`) |
+| **Core kickoff — auth** | **Session** (web) + **JWT** (Public API); **OIDC v1** primary SSO + minimal local fallback; **domain JIT**; **SAML-ready** `AuthProvider`; custom Studio roles; admin default ([§22 P36](#p36-sso-org-login-vs-communications-oauth)) |
+| **Core kickoff — Surface load** | Parallel module loaders; namespaced `modules.{key}` response; composed UI shell — not client-side N+1 merge |
+| **Core kickoff — disabled modules** | **403** `MODULE_DISABLED`; disabled contributions **omitted from UI composition**; dependency graph + warning on disable |
+| **Core kickoff — `contributions.api`** | v0 manifest shape decided (audience, basePath, openApiFragment, permissions) |
+| **Core kickoff — SDK / API clients** | **Contract-first** generated clients from OpenAPI; `core/tools/` generators; per-module npm packages optional — most consumers use composed API + core tools, not `@erganis/sdk-inventory` |
+| **Core kickoff — Nest layout** | Hybrid: platform Nest modules with `controllers/`, `application/`, `domain/`, `infrastructure/` inside each |
+| **Core kickoff — email** | **Core email libraries** implement transport; Communications module **uses** them; password reset / ops mail **without** enabling Communications |
+| **Core kickoff — envelope rollback (P35)** | **Hybrid:** shared txn for required `phase: db` steps; optional `post_commit`; `outcome` success/partial/failed; HTTP 200/422; **Core libraries manage transactions** — modules use injected unit of work |
+| **Core kickoff — SSO (P36)** | **OIDC in v1** (primary); minimal **local** fallback; **domain JIT** provisioning; **SAML-ready** provider interface (SAML deferred); Communications mailbox OAuth separate |
+| **Core kickoff — initial implementation (P38)** | **Phases 0–3 all required:** shell → auth → loader/stub envelope smoke (3C) → **Documents module** (3A) in `studio/modules/`; **Inventory deferred** (module follow-on, not Core) |
+| **Core kickoff — module inheritance (P37)** | **Deferred** — use contracts + orchestrator + Core **mapping tool**; Public IDs invariant; Core validates, modules implement |
+| **Core kickoff — test plan (P39)** | **Jest** platform-wide; Testcontainers (local) + Postgres service (CI); GitHub Actions build/test steps from Phase 0; TEST_STRATEGY at Phase 0 scaffold |
 
 ---
 
-## 19. Open questions
+## 20. Open questions
 
 ### Status key
 
@@ -1272,51 +1817,103 @@ Full catalog: [§10 Design](#design). Phased backlog:
 |--------|---------|
 | **Open** | Needs design discussion |
 | **Partial** | Direction set; details remain |
-| **Answered** | Decided — see [§18](#18-resolved-decisions) |
+| **Answered** | Decided — see [§19](#19-resolved-decisions) or [§22](#22-core-kickoff-decisions-reference) |
 
-| # | Topic | Status |
-|---|-------|--------|
-| 1 | Operation envelope workshop — Save Product + drawing approval examples | **Partial** — policy set; schemas/worked specs in [§20](#20-core-design--needing-to-discuss-high-priority) |
-| 2 | Agora sync conflicts — Agora wins public fields; Studio wins org trade? | **Open** |
-| 3 | Documents v1 — org vault only vs project-linked attachments? | **Open** |
-| 4 | Companion maps v1 — defer MapLibre to Agora web? | **Open** |
-| 5 | Multi-language SDKs — codegen, publish, version sync? | **Open** |
-| 6 | Icon asset host — self-hosted vs CDN; Lucide vs Tabler vs Phosphor? | **Open** |
-| 7 | Drawing viewer stack — 2D DXF vs BIM first? | **Open** |
-| 8 | Studio + Client shared DB — RBAC, orchestrator paths, concurrency? | **Open** |
-| 9 | Email in Core vs Communications module | **Answered** — Communications module; optional Core transport TBD ([§20](#20-core-design--needing-to-discuss-high-priority)) |
-| 10 | Shipment tracking placement | **Answered** — Inventory |
-| 11 | Notes vs Calendar boundary | **Answered** — Notes separate; calendar in Planner |
-| 13 | Room side-by-side compare | **Answered** — Design v1 |
-| 12 | Mood board / color scheme placement | **Answered** — Design creates; Presentations delivers |
-| 27 | Core composition class catalog | **Open** — interfaces for Presentations, Inventory, Business blocks ([§20](#20-core-design--needing-to-discuss-high-priority)) |
-| 28 | Proposal tax rules — Business vs Presentations | **Partial** — Presentations UI toggle; Business owns tax/cost rules |
-| 14 | Day Tracker / Tasks placement | **Answered** — Planner › Tasks |
-| 15 | Erganis Planner naming | **Open** — "Planner" working name |
-| 16 | Room size / IBC planner | **Answered** — Build module |
-| 17 | Erganis Reports vs Business | **Answered** — separate modules |
-| 18 | Drawing approval ownership | **Answered** — Build module + Core roles |
-| 19 | External app auth — OAuth, API keys, session delegation? | **Open** |
-| 20 | Module API manifest — `contributions.api` shape; disabled-module response? | **Open** — [§20](#20-core-design--needing-to-discuss-high-priority) |
-| 21 | SDK for module-extended API — composed spec vs core + module packages? | **Open** |
-| 22 | Module packaging — how Core loads `studio/` and `agora/modules/` at deploy? | **Open** — [§20](#20-core-design--needing-to-discuss-high-priority) |
-| 23 | Surface `load` composition — multi-module project screen? | **Open** — [§20](#20-core-design--needing-to-discuss-high-priority) |
-| 24 | Module UI loading in Next — build-time vs dynamic imports for third-party UI? | **Open** — [§20](#20-core-design--needing-to-discuss-high-priority) |
-| 25 | Reports data-emission manifest shape | **Open** |
-| 26 | Core optional system mail transport vs Communications-only email | **Open** — [§20](#20-core-design--needing-to-discuss-high-priority) |
-| 29 | Studio desktop shell (Electron vs Tauri vs other) | **Open** |
-| 30 | Offline sync protocol & **conflict resolution** UX (same entry, two writers) | **Open** — [§20](#20-core-design--needing-to-discuss-high-priority) |
-| 31 | External tool integrations — which exports/connectors first (Excel, Pinterest, …)? | **Open** — rank by user need ([§1](#feature-prioritization-how-to-read-this-plan)) |
+### Before Core vs later
+
+| Category | Blocks Phase 0? |
+|----------|-----------------|
+| **Kickoff (P35–P39)** | **No** — complete |
+| **Refine during Phases 0–3** | No — decide while building ([below](#refine-during-core-phases-03-not-blocking-start)) |
+| **Core platform (later)** | No — [below](#core-platform--later-not-blocking-phase-0) |
+| **Product / other repos** | No — [below](#product--other-repos-not-blocking-core) |
+
+### Refine during Core Phases 0–3 (not blocking start)
+
+| # | Topic | Status | When needed |
+|---|-------|--------|-------------|
+| 1 | Envelope JSON Schema + worked examples | **Partial** | Phase 2–3 |
+| 3 | Documents v1 — vault vs project-linked | **Open** | Phase 3 |
+| 8 | Studio + Client RBAC paths | **Partial** | Phase 1+ |
+| 19 | Public API keys | **Partial** | Phase 1+ |
+
+### Core platform — later (not blocking Phase 0)
+
+| # | Topic |
+|---|-------|
+| 24 | Module UI loading in Next |
+| 25 | Reports data-emission manifest |
+| 27 | Composition class catalog |
+| 30 | Offline sync & conflict resolution |
+| 33 | Scraper legal/ToS policy |
+
+### Product & other repos (not blocking Core)
+
+| # | Topic |
+|---|-------|
+| 2 | Agora sync conflicts |
+| 4 | Companion maps v1 |
+| 5 | Multi-language SDKs |
+| 6 | Icon asset host |
+| 7 | Drawing viewer stack |
+| 15 | Planner naming |
+| 28 | Proposal tax rules |
+| 29 | Desktop shell |
+| 32 | Mnemosyne DB / editorial |
+| 34 | Business budgeting v1 |
+
+### Answered (index)
+
+#9–18, #20–23, #26, #32a, #35–39 — see [§19](#19-resolved-decisions), [§22](#22-core-kickoff-decisions-reference).
 
 Use `Ex: TODO` in specs where behavior is not yet finalized.
 
 ---
 
-## 20. Core design — needing to discuss (high priority)
+## 21. Core readiness & design backlog
 
-> **This is the most important design work on the platform.** Everything else (modules, Studio UI, Agora, Companion) assumes Core is correct. Schedule dedicated workshops here before implementing domain modules.
+> **Start here for Core implementation.** Kickoff decisions **P35–P39** are **complete** (Jun 2025). Nothing in kickoff blocks **Phase 0**. Full narratives: [§22](#22-core-kickoff-decisions-reference).
 
-### Design phases (recommended order)
+### Core readiness — start here
+
+**Verdict:** Ready to begin **Phase 0** — Nest shell, Postgres, Jest, GitHub Actions CI in `core/services/`.
+
+| Area | Status | Reference |
+|------|--------|-----------|
+| Envelope rollback & HTTP | **Decided** (P35) | [§13](#13-operation-envelope--orchestration), [§22 P35](#p35-envelope-partial-success-vs-full-failure) |
+| SSO / auth | **Decided** (P36) | [§6 Authentication](#authentication-decided--22-p36-sso-org-login-vs-communications-oauth), [§22 P36](#p36-sso-org-login-vs-communications-oauth) |
+| Module integration model | **Decided** (P37) | [§12](#module-inheritance-decided--22-p37-module-inheritance), [§22 P37](#p37-module-inheritance) |
+| Initial implementation phasing | **Decided** (P38) | [§6](#initial-core-implementation-scope-decided--22-p38-first-core-vertical-slice), [§22 P38](#p38-first-core-vertical-slice) |
+| Test plan | **Decided** (P39) | [§6 Test plan](#test-plan-decided--22-p39--core-test-plan), [§22 P39](#p39--core-test-plan) |
+| Loader, Public IDs, DB, API composer, email | **Decided** (kickoff #1–#11) | [§12](#12-module-system--manifests), [§19](#19-resolved-decisions) |
+
+### What's left before beginning Core?
+
+**Nothing from kickoff blocks Phase 0.** Refine the items below **while building** Phases 0–3 — they are not prerequisites to starting.
+
+| Item | Status | When to decide |
+|------|--------|----------------|
+| TEST_STRATEGY (APM doc from template) | Not written | When Phase 0 scaffold lands |
+| Core OpenAPI baseline | Partial | Phases 0–1 |
+| Envelope JSON Schema + worked examples (Save Product, drawing approve) | Partial | Phases 2–3 |
+| Public API keys shape | Partial — JWT-only OK initially | Phase 1+ |
+| Documents v1 scope — org vault vs project-linked attachments | **Open** | **Before Phase 3** |
+| Studio + Client RBAC detail (roles → envelope actions) | Partial | Phase 1+ |
+
+Everything else in [§20](#20-open-questions) (Agora sync, Companion maps, desktop shell, Mnemosyne, Business budgeting, etc.) is **product/platform backlog** — not gating Core Phase 0.
+
+### Implementation phases (Core + first module)
+
+Matches [§6 Initial Core implementation scope](#initial-core-implementation-scope-decided--22-p38-first-core-vertical-slice):
+
+| Phase | Goal | Key deliverables |
+|-------|------|------------------|
+| **0** | Shell | Nest app in `core/services/`; Postgres; Jest; extend `.github/workflows/ci.yml` |
+| **1** | Auth | OIDC + local fallback; org + users + roles; session/JWT |
+| **2** | Loader + smoke | Module loader lifecycle; stub envelope orchestration end-to-end |
+| **3** | First module | **Documents** in `studio/modules/documents/` — Inventory is a follow-on module slice, not Core |
+
+### Design layers (ongoing)
 
 ```mermaid
 flowchart LR
@@ -1325,105 +1922,54 @@ flowchart LR
     P3 --> P4[4 API surface]
 ```
 
-| Phase | Deliverables |
-|-------|----------------|
-| **1 — Contracts** | Operation envelope JSON Schema; Public ID model; Core OpenAPI baseline; module manifest v1 (`api`, `reports` emissions) |
-| **2 — Runtime shell** | Auth; org + **users + roles**; module loader lifecycle; orchestrator + locks + operation log; Core + module migrator |
-| **3 — Platform services** | FileStore; pg-boss + outbox; search adapter; composition resolver; **UI toolbox**; **trigger classes**; **event handlers** |
-| **4 — API surface** | Surface API gateway; Public API subset; org API composer (enabled modules); SDK pipeline |
+| Layer | Deliverables |
+|-------|--------------|
+| **1 — Contracts** | Envelope JSON Schema; Public ID registry; Core OpenAPI; manifest v1 |
+| **2 — Runtime shell** | Auth; module loader; orchestrator + locks; migrators |
+| **3 — Platform services** | FileStore; pg-boss; search adapter; UI toolbox; triggers/events |
+| **4 — API surface** | Surface API; Public API subset; org API composer; SDK via `core/tools/` |
 
-### Workshop topics (discuss next)
+### Design backlog — workshop topics
 
-#### A. Operation envelope (blocking)
+| Topic | Status | Notes |
+|-------|--------|-------|
+| **A. Operation envelope** | **Partial** | Rollback/HTTP decided (P35); JSON Schema + worked specs in Phase 2–3 |
+| **B. Module loader & packaging** | **Resolved** | Path config + multi-registry; schema-per-module — [§12](#12-module-system--manifests) |
+| **C. Identity & authorization** | **Partial** | OIDC + roles decided (P36); flesh out Build approvals, client portal, API keys |
+| **D. Surface runtime** | **Resolved** | Parallel loaders, namespaced merge, composed UI — [§19](#19-resolved-decisions) |
+| **E. API composer** | **Resolved** | `contributions.api` v0; 403 `MODULE_DISABLED` — [§12](#12-module-system--manifests) |
+| **F. UI toolbox & composition classes** | **Open** | Layout slots, embeddable blocks, Next dynamic imports — [§20 #24, #27](#core-platform--later-not-blocking-phase-0) |
+| **G. Trigger classes & event handlers** | **Open** | Taxonomy + manifest registration — refine with first real workflows |
+| **H. Studio offline sync & conflicts** | **Open** | Local replica, conflict UX — [§20 #30](#core-platform--later-not-blocking-phase-0) |
+| **I. Communications vs Core email** | **Resolved** | Core transport libraries; Communications consumes — [§19](#19-resolved-decisions) |
+| **J. Cross-cutting services** | **Partial** | FileStore, outbox, search FTS v1 — implement incrementally Phases 0–3 |
+| **K. First vertical slice** | **Resolved** | Phases 0–3; Documents module — [§22 P38](#p38-first-core-vertical-slice) |
+| **L. Scraper Services** | **Open** | Recipe schema, legal/ToS — [§20 #33](#core-platform--later-not-blocking-phase-0) |
 
-- JSON Schema for envelope + steps
-- Worked specs: **Save Product** (Inventory + optional Finance), **Drawing approve** (Build + Core roles)
-- When is `draft` vs `save` vs `approve`?
-- Partial failure UX contract
+### Kickoff quick reference (#1–#11)
 
-#### B. Module loader & packaging (blocking)
+Compact index — full P35–P39 narratives in [§22](#22-core-kickoff-decisions-reference).
 
-- How Core resolves modules from `studio/modules/` and `agora/modules/` in **dev** vs **installed** deployments
-- Options: monorepo path config, installer module cache, published `@erganis/module-*` packages
-- Enable / disable / upgrade lifecycle; compatibility matrix (`erganisCoreVersion`)
-- Table ownership convention (prefix vs schema-per-module)
+| # | Topic | Decision (one line) |
+|---|-------|---------------------|
+| 1 | Module loader | Path config now; multi-registry packages later; `studio/modules/` + `third-party/` |
+| 2 | Database | Schema per module; org-delineated data within schemas |
+| 3 | Public IDs | `{type}_{ulid}`; type registry in Core |
+| 4 | Envelope | Full action enum; hybrid txn rollback (P35); 409 on lock conflict |
+| 5 | Auth | Session (web) + JWT (Public API); OIDC v1 (P36); custom roles in Studio |
+| 6 | Surface load/save | Parallel loaders + composed UI; envelope orchestration for writes |
+| 7 | API composer | 403 `MODULE_DISABLED`; granular disable v1 |
+| 8 | SDK | Contract-first via `core/tools/`; dynamic web module loading |
+| 9 | Nest layout | Hybrid — platform modules with controllers/application/domain/infrastructure |
+| 10 | Vertical slice | Phases 0–3; Documents in Phase 3 (P38) |
+| 11 | Email | Core transport libraries; Communications consumes |
 
-#### C. Identity & authorization (blocking)
+### Suggested next steps
 
-- **Users, orgs, roles in Core** (decided) — flesh out role model for Build approvals, client portal users, module permissions
-- Studio vs Client: which surfaces and envelope actions each role may invoke
-- External app auth (API keys, OAuth, delegated sessions)
-
-#### D. Surface runtime (blocking)
-
-- **`load` composition** — how Project surface merges Planner + Documents + Design (read path)
-- **`save` orchestration** — write path (already directional)
-- Validation composition across modules
-
-#### E. API composer (blocking)
-
-- `contributions.api` manifest shape
-- Merge OpenAPI per org; Surface vs Public audience
-- Response when module disabled (`404` vs structured error)
-- SDK strategy: baseline + optional module packages
-
-#### F. Dashboard, UI toolbox & composition classes (important)
-
-- Core **UI toolbox** — layout regions, navigation shell, slot registry, theme tokens
-- Modules register dashboard widgets and Studio UI slots
-- **Composition interfaces / base classes** — embeddable blocks (Inventory alternatives in Presentations, cost verification panels from Business)
-- **Reports** owns joined analytics; single-module dashboards stay in owning module
-- How Next.js **imports** module UI (build-time workspace graph vs dynamic — affects third-party modules)
-
-#### G. Trigger classes & event handlers (important)
-
-- **Trigger class** taxonomy — what can start a workflow (save, approve, schedule, inbound email, etc.)
-- Relationship to operation envelope (sync steps) vs async **event handlers**
-- Module registration of trigger handlers in manifest
-- Config-first workflow definitions built on trigger classes
-
-#### H. Studio offline sync & conflict resolution (important)
-
-- Local replica schema on desktop — what entities are offline-eligible per org/project
-- Sync queue: push/pull protocol with Core; relationship to operation envelope and `expectedVersion`
-- **Conflict detection** when desktop and web (or two desktops) edit the **same entry**
-- **Resolution UX** — compare, keep mine/theirs, field-level merge; no silent overwrite for workflow entities
-- Offline mutation replay when server was down during orchestrator lock conflicts
-
-#### I. Communications vs Core email transport (discuss)
-
-| Approach | Pros | Cons |
-|----------|------|------|
-| **Communications module only** | Clear product boundary; OAuth/UI/threading in one place | Apps without Communications build their own email |
-| **+ Core minimal transport** | Core can send system/ops email (password reset, job alerts) without enabling Communications | Two email paths to maintain |
-| **Email entirely in Core** | One integration point | Bloated Core; optional module story weaker |
-
-**Current decision:** **Communications module** for product email. **Open:** whether Core exposes a thin `EmailTransport` interface for operational mail and for external apps that only need Core (no full Communications). Low risk if the interface is small and Communications implements it too.
-
-#### J. Cross-cutting services
-
-- FileStore paths and permissions
-- Event outbox + module event subscriptions
-- Search: PostgreSQL FTS v1 adapter interface
-- Updater / installer / migrator for self-hosted
-
-#### K. First vertical slice (pick one)
-
-Candidates to validate loader + envelope + one Surface end-to-end:
-
-- **Documents** (simpler writes), or
-- **Inventory** (Save Product multi-step story)
-
-### Suggested next conversation order
-
-1. Module loader & packaging (unblocks everything else)
-2. Operation envelope schemas + two worked examples
-3. Users/roles + Client portal RBAC
-4. Surface `load` composition
-5. API composer + `contributions.api`
-6. Studio offline sync & conflict resolution (designer resilience)
-7. Core email transport vs Communications-only
-8. First vertical slice module choice
+1. **Phase 0** — Core Nest shell + Postgres + Jest + GitHub Actions CI
+2. Core OpenAPI baseline + auth module skeleton (Phase 1 prep)
+3. Envelope JSON Schema + worked examples (Phase 2)
+4. Documents v1 scope workshop (before Phase 3)
 
 ### Plain-language reminder
 
@@ -1446,7 +1992,347 @@ Candidates to validate loader + envelope + one Surface end-to-end:
 
 ---
 
-## 21. Decision log
+
+## 22. Core kickoff decisions (reference)
+
+> **Purpose:** Reference archive for **P35–P39** and kickoff workshop decisions (Jun 2025). **Kickoff complete** — not a pending queue. For what remains before/during Core, see [§21](#21-core-readiness--design-backlog). Future decisions promoted here should move summaries to [§19](#19-resolved-decisions) and [§23](#23-decision-log).
+
+Cross-reference: [§20 open questions](#20-open-questions) #35–#39.
+
+### How to use
+
+| Step | Action |
+|------|--------|
+| 1 | **Kickoff complete** — proceed to **Phase 0** ([§21](#core-readiness--start-here), [§6](#initial-core-implementation-scope-decided--22-p38-first-core-vertical-slice)) |
+| 2 | Use P35–P39 blocks below as implementation reference |
+| 3 | New kickoff-style decisions: add block here, then promote to §19 / §23 |
+
+### Status key
+
+| Status | Meaning |
+|--------|---------|
+| **Open** | Not decided — needs discussion |
+| **Decided** | Locked — see Decision field |
+
+---
+
+### P35 — Envelope partial success vs full failure
+
+**§20 #35** · **Kickoff #4b** · **Status:** **Decided** (2025-06-12)
+
+**Context:** The operation envelope supports `failureClass` per step (`required` | `optional` | `advisory`). We must define what happens when optional steps fail vs when required steps fail — including **rollback**, **compensation**, and what the **client receives** (HTTP status + body). This blocks multi-step stories (e.g. Save Product: Inventory required → Finance optional).
+
+**Related (decided):** Lock conflict → **409 Conflict** on `expectedVersion` mismatch. Full action enum includes `load`, `save`, `draft`, `archive`, `approve`, `sync`.
+
+#### Decision summary
+
+| Area | Choice |
+|------|--------|
+| **Rollback** | **Hybrid (C)** — required **`phase: db`** steps in **one orchestrator-managed PostgreSQL transaction**; optional/advisory/external steps **`post_commit`** |
+| **HTTP** | **200** + `outcome: success \| partial`; **422** + `outcome: failed` for required step failure |
+| **`partial` outcome** | First-class — distinct from `success` when optional/advisory warnings exist |
+| **Developer txn handling** | **Core libraries** (`OperationContext`, `DbUnitOfWork` / `TransactionScope`) — module handlers **do not** open their own transactions for envelope steps |
+| **Cross-module refs** | Public IDs (indexed); no cross-schema FKs; shared txn does not require cross-schema JOINs |
+| **v1 rule** | `failureClass: required` → `phase: db` only |
+
+Full specification: [§13 — Orchestrator transaction library](#orchestrator-transaction-library-decided).
+
+#### Step failure behavior (mental model)
+
+| `failureClass` | On step failure | Effect on prior steps in same operation |
+|----------------|-----------------|----------------------------------------|
+| **required** | Operation **fails** | Rolled back or compensated |
+| **optional** | Warning recorded; operation may still succeed | Prior required steps **kept** |
+| **advisory** | Informational only | Prior steps **kept** |
+
+#### Rollback options
+
+| Option | How it works | Pros | Cons |
+|--------|--------------|------|------|
+| **A — Single DB transaction** | All DB steps share one PostgreSQL transaction; any required failure → `ROLLBACK` | True atomicity; simplest mental model | Long locks; cannot wrap external APIs (email, webhooks, Agora sync) |
+| **B — Saga-lite (compensators)** | Each step may commit; on required failure, run **compensate** handlers in reverse order | Works with external side effects | Modules must implement compensators; more code and testing |
+| **C — Hybrid (recommended)** | **DB steps** in one transaction per operation; **external/optional** steps outside txn with compensate or “warning only” | Practical for v1; matches Inventory + optional Finance | Two behaviors to document clearly |
+
+#### HTTP response options
+
+| Option | Behavior | Pros | Cons |
+|--------|----------|------|------|
+| **A — 200 + `outcome` in body (recommended)** | `200` for `success` and `partial`; `422` for `failed` (required step failed) | Clear partial success UX; axios-friendly | Clients must read `outcome`, not status alone |
+| **B — 207 Multi-Status** | Per-step HTTP semantics | Explicit | Poor SDK ergonomics; uncommon in REST clients |
+| **C — 422 on any failure** | No distinct partial HTTP signal | Simple failure path | Cannot return “saved inventory, finance warning” cleanly |
+
+#### Proposed response contract (if A + hybrid rollback)
+
+| `outcome` | HTTP | When |
+|-----------|------|------|
+| `success` | 200 | All required steps OK; no optional warnings |
+| `partial` | 200 | All required OK; one or more optional/advisory warnings |
+| `failed` | 422 | Any **required** step failed; DB changes rolled back (or compensated) |
+
+Response body always includes `steps[]` with per-step `status`, `message`, and optional `code` so **developers can implement custom UX**.
+
+#### Developer extensibility
+
+Module step handlers declare `failureClass` in manifest. Orchestrator enforces policy; modules should not implement their own cross-step rollback. Optional: per-step `onExhaustedRetries` behavior (warn vs escalate to failed).
+
+**Recommendation:** **Hybrid rollback (C)** + **HTTP 200/422 with `outcome` (A)**. ~~Document in envelope JSON Schema and §13.~~ **Adopted** — see [§13](#13-operation-envelope--orchestration).
+
+| Field | Value |
+|-------|-------|
+| **Decision** | Hybrid rollback; orchestrator-managed shared txn for `phase: db` required steps; Core `DbUnitOfWork`/`TransactionScope` in `core/packages/`; HTTP 200/422; `outcome` includes `partial` |
+| **Date** | 2025-06-12 |
+
+---
+
+### P36 — SSO: org login vs Communications OAuth
+
+**§20 #36** · **Kickoff #5 follow-up** · **Status:** **Decided** (2025-06-12)
+
+**Context:** Auth direction is **session cookie** (Studio/Client web) + **JWT** (Public API / Companion). Org login SSO and Communications mailbox access are **separate problems**.
+
+#### Decision summary
+
+| Area | Choice |
+|------|--------|
+| **Org login v1** | **OIDC** as **primary** SSO (Google Workspace, Microsoft 365 / Azure AD, Okta OIDC, etc.) |
+| **Local login** | **Minimal fallback** — org bootstrap, development, break-glass admin — not default for production orgs |
+| **SAML** | **Deferred** — not built in v1; architecture **SAML-ready** via `AuthProvider` (`SamlAuthProvider` added when enterprise need appears) |
+| **Provider model** | `AuthProvider` interface in Core: `LocalAuthProvider`, `OidcAuthProvider` (v1); stub/extension point for `SamlAuthProvider` |
+| **Domain JIT** | On first OIDC login, auto-provision or link Core user when token **email domain** matches org **allowed domains** |
+| **Per-org config** | IdP issuer, client id/secret, allowed domains, `authMode` in Core platform schema |
+| **After login** | Same session cookie (web) / JWT issue (Public API) regardless of provider |
+| **Communications** | **Mailbox OAuth** (Gmail/Graph) is a **Communications module** milestone — separate consent, separate tokens; optional UX prompt when email matches SSO identity |
+
+Full specification: [§6 Authentication](#authentication-decided--22-p36-sso-org-login-vs-communications-oauth).
+
+#### Two separate concerns (reference)
+
+| Concern | Purpose | Typical mechanism |
+|---------|---------|-------------------|
+| **Org SSO** | Firm user signs into Studio/Client | OIDC or SAML via IdP (Okta, Azure AD, Google Workspace) |
+| **Mailbox OAuth** | App reads/sends user email in Communications | OAuth2 **per user** (Gmail API, Microsoft Graph) — **not** org SSO |
+
+**Recommendation:** Keep them **separate in architecture**. Communications OAuth does **not** replace org login.
+
+#### Org SSO options
+
+| Option | Approach | Pros | Cons |
+|--------|----------|------|------|
+| **A — OIDC in v1** | Core `AuthModule` supports OIDC providers | Covers Google, Azure AD, Okta via OIDC | SAML-only enterprises need bridge later |
+| **B — OIDC + SAML in v1** | Full enterprise IdP support | Fewer “we can’t use Erganis” objections | Heavier implementation and test matrix |
+| **C — Local login v0 + OIDC-shaped extension points (recommended for Core start)** | Email/password (or invite link) first; `AuthProvider` interface; OIDC plugged in next | **Does not block Core scaffolding**; ship auth shell fast | Firms with mandatory IdP wait one iteration |
+| **D — Defer all SSO** | Local only until post-MVP | Fastest | May block enterprise pilots |
+
+#### Communications OAuth (when Communications module ships)
+
+| Item | Decision direction |
+|------|-------------------|
+| Storage | Refresh tokens encrypted per user in Core DB (`communications` schema) |
+| Scope | Module-owned; Core provides secure token storage interface if needed |
+| Link to org SSO | Optional “same email domain” hint only — **not** same token |
+
+#### Complexity check
+
+Session + JWT is **moderate** complexity. OIDC adds **provider config UI**, callback URLs, token validation, and account linking (local user ↔ IdP subject). **Does not require** Communications to be enabled.
+
+**Recommendation:** ~~**C** for Core v0~~ **Superseded** — adopt **Option A (OIDC in v1)** with SAML-ready providers and minimal local fallback.
+
+| Field | Value |
+|-------|-------|
+| **Decision** | **OIDC in v1** (primary org SSO); **domain JIT**; minimal **local** fallback; **SAML-ready** `AuthProvider` (SAML not implemented until needed); Communications **mailbox OAuth** separate |
+| **Date** | 2025-06-12 |
+
+---
+
+### P37 — Module inheritance
+
+**§20 #37** · **Kickoff #7 follow-up** · **Status:** **Decided** (2025-06-12)
+
+**Context:** When disabling or replacing modules, two ideas were in play: **granular disable** vs **module inheritance** (third-party replaces Inventory, etc.).
+
+#### Decision summary
+
+| Area | Choice |
+|------|--------|
+| **Module inheritance** | **Deferred** — no current need; not committed for v1/v2 |
+| **Public IDs** | **Invariant** — must remain stable and resolvable; integrations link via contracts + IDs, not module slot replacement |
+| **Contract validation** | **Core owns** validation at orchestrator/API/Surface boundaries |
+| **Implementation** | **Modules own** domain logic and storage that fulfills contracts |
+| **Authoring** | `core/tools/` + **Studio** expose **linkable public contracts** when designing modules |
+| **Mapping** | **Core-owned mapping tool** — optional declarative config for step/field wiring between contracts; plugs into Studio and orchestrator configuration editors |
+| **v1 instead of inheritance** | **Granular disable** of `contributions.*` + **dependency graph** warnings; third parties use **API + orchestrator steps** |
+
+Full specification: [§12 Module inheritance](#module-inheritance-decided--22-p37-module-inheritance).
+
+#### Comparison (reference — inheritance not adopted)
+
+| | **Module inheritance** | **Granular contributions disable** |
+|---|------------------------|--------------------------------------|
+| **Description** | One module slot; loader picks “effective” implementation (first-party or inherited) | Module stays enabled; specific `contributions.*` hooks toggled off |
+| **Pros** | Clean “replace Inventory” story for advanced integrators | Safer default; smaller blast radius; first-party keeps working |
+| **Cons** | Loader versioning, security review, support burden, manifest conflicts | More manifest surface; admins need dependency graph UX |
+| **Third-party fit** | Rare — most third parties use **APIs**, not table replacement | Matches API-first third-party model |
+
+#### Advanced inheritance sub-options (if ever built)
+
+| Option | Behavior | Risk |
+|--------|----------|------|
+| **Extend** | Third-party adds handlers alongside first-party | Handler ordering conflicts |
+| **Replace** | Third-party fully substitutes module id | Data migration, broken Surfaces |
+| **Override step** | Replace single orchestrator step only | Narrower; easier to reason about |
+
+**Recommendation:** ~~Defer module inheritance to v2+~~ **Adopted** — inheritance **deferred indefinitely** until concrete need; ship granular disable + contract/mapping integration model.
+
+| Field | Value |
+|-------|-------|
+| **Decision** | **No module inheritance** for foreseeable roadmap; **Public ID invariant**; Core **contract validation** + **mapping tool**; modules **implement**; Studio/tools for linkable contracts |
+| **Date** | 2025-06-12 |
+
+---
+
+### P39 — Core test plan
+
+**§20 #39** · **Status:** **Decided** (2025-06-12)
+
+**Context:** Kickoff decisions require automated testing and CI — not ad-hoc manual checks alone.
+
+#### Decision summary
+
+| Area | Choice |
+|------|--------|
+| **Test runner (platform)** | **Jest** everywhere — Core, Nest backends/modules, Next.js web apps, React Native Companion |
+| **UI tests** | **Testing Library** (`@testing-library/react`, `@testing-library/react-native` as applicable) |
+| **Rationale** | One runner across repos; Nest default; Next/RN both support Jest — avoids Vitest/Jest split |
+| **DB — local dev** | **Testcontainers** PostgreSQL |
+| **DB — CI** | **Postgres service container** in GitHub Actions (same semantics, faster CI) |
+| **OIDC in tests** | Mock IdP / fixtures — no live Google/Microsoft in CI |
+| **Deliverable timing** | Matrix locked in plan **now**; full **TEST_STRATEGY** (APM template) when **Phase 0** scaffold lands |
+| **CI** | **GitHub Actions** — build + test workflow steps; extend existing [`.github/workflows/ci.yml`](../.github/workflows/ci.yml) from Phase 0 |
+
+Full specification: [§6 Test plan](#test-plan-decided--22-p39--core-test-plan).
+
+#### Test layers (reference)
+
+| Layer | Phases | Scope |
+|-------|--------|-------|
+| **Unit** | 0+ | `DbUnitOfWork`, envelope parsing, Public ID helpers, contract validators |
+| **Integration** | 1+ | OIDC (mock IdP), domain JIT, local fallback, session, JWT |
+| **Integration** | 2+ | Module loader enable/disable; stub module; envelope smoke; 409 / 422 |
+| **Integration** | 3+ | Documents save + FileStore; org RBAC on routes |
+| **E2E** | After Studio wired | Login → upload (not blocking Core Phase 3) |
+
+#### Minimum test cases (must cover)
+
+- OIDC callback + domain JIT; local fallback login
+- Session cookie (web) + JWT (Public API)
+- Required step failure → txn rollback + **422** `failed`
+- Optional step failure → **200** `partial`
+- **409** `expectedVersion` lock conflict
+- Module disabled → **403** `MODULE_DISABLED` (when composer routes exist)
+- Documents envelope save + file under `ERGANIS_DATA_ROOT`
+- Stub module envelope smoke (Phase 2)
+
+#### Tooling (decided)
+
+| Choice | Decision |
+|--------|----------|
+| **Runner** | **Jest** — platform standard (Core, Nest, web, RN) |
+| **UI** | Testing Library |
+| **DB local** | Testcontainers PostgreSQL |
+| **DB CI** | GitHub Actions Postgres **service** |
+| **OIDC** | Mock IdP / fixtures |
+| **Location** | `core/infrastructure/tests/`, `core/services/**/*.spec.ts`, `studio/modules/documents/` |
+| **CI** | GitHub Actions: checkout → setup Node → install → lint/typecheck → build → test |
+| **TEST_STRATEGY doc** | APM template when Phase 0 scaffold exists |
+
+| Field | Value |
+|-------|-------|
+| **Decision** | Jest platform-wide; Testcontainers + CI Postgres service; GitHub Actions build/test from Phase 0; TEST_STRATEGY deferred to Phase 0 scaffold |
+| **Date** | 2025-06-12 |
+
+---
+
+### P38 — First Core vertical slice
+
+**§20 #38** · **Kickoff #10** · **Status:** **Decided** (2025-06-12)
+
+**Context:** What to build **first** to validate Core + module loading — not the full product roadmap. **Domain modules are not part of the `core/` repo**; Core hosts the runtime, orchestrator, auth, and loader. First-party modules (Documents, Inventory, …) live under **`studio/modules/`**.
+
+#### Decision summary
+
+| Area | Choice |
+|------|--------|
+| **Scope** | **All Phases 0–3** required before broader module work |
+| **Phase 0** | Nest shell, Postgres, layered `core/services/` + `core/packages/` |
+| **Phase 1** | Auth: OIDC v1 + minimal local fallback, session, JWT, org, custom roles ([§6 Authentication](#authentication-decided--22-p36-sso-org-login-vs-communications-oauth)) |
+| **Phase 2 (3C)** | Module loader + **hello-world stub** in `studio/modules/` + **authenticated envelope smoke test** (orchestrator + stub `phase: db` step, `DbUnitOfWork`) |
+| **Phase 3 (3A)** | **Documents** first-party module — `studio/modules/documents/` — upload/vault/envelope save; Core **FileStore** |
+| **Not now (3B)** | **Inventory Save Product** — **Inventory is a Studio module**, not Core; follow-on slice after Documents for multi-step optional `post_commit` |
+| **Test plan** | Formal **TEST_STRATEGY** required — [§6 Test plan](#test-plan-action-required) |
+
+Full phase table: [§6 Initial Core implementation scope](#initial-core-implementation-scope-decided--22-p38-first-core-vertical-slice).
+
+#### Implementation phases
+
+```mermaid
+flowchart LR
+    P0[Phase 0 — Nest shell] --> P1[Phase 1 — Auth OIDC]
+    P1 --> P2[Phase 2 — Loader stub 3C]
+    P2 --> P3[Phase 3 — Documents 3A]
+```
+
+| Phase | Delivers | Validates | Repo |
+|-------|----------|-----------|------|
+| **0 — Shell** | Nest app, health, Postgres, layered `services/` folders, `core/packages/` | §15 map #42 layout | `core/` |
+| **1 — Auth** | OIDC + local fallback, session cookie, JWT issue, org context, admin default + custom role storage | P36 | `core/` |
+| **2 — Loader + stub (3C)** | Load hello-world from `studio/modules/`; manifest compile; migrator stub; **authenticated envelope smoke** on stub handler | Kickoff #1, P35 txn library | `core/` + `studio/modules/` |
+| **3 — Documents (3A)** | Documents module: upload, vault, project link, envelope save | FileStore, real module schema, Surface save | `studio/modules/documents/` + Core FileStore |
+
+#### Phase 3 module candidates (reference)
+
+| Option | Scope | Initial implementation? |
+|--------|-------|---------------------------|
+| **A — Documents** | First real module in `studio/modules/documents/` | **Yes — Phase 3** |
+| **B — Inventory Save Product** | Multi-step optional steps | **No — follow-on module slice** (`studio/modules/inventory/` + optional Business step) |
+| **C — Auth + stub envelope smoke** | Loader stub + orchestrator under real auth | **Yes — Phase 2** (paired with Phase 1 auth) |
+
+#### Dependency note
+
+**P35 decided** — Documents (single required `phase: db` step) validates happy path first. **Inventory module** follow-on exercises optional `post_commit` and `outcome: partial`.
+
+| Field | Value |
+|-------|-------|
+| **Decision** | Phases **0–3** all required; **3C** in Phase 2 (stub + envelope smoke); **3A Documents** in Phase 3; **3B Inventory deferred** (module, not Core) |
+| **Date** | 2025-06-12 |
+
+---
+
+### Confirmed alignment (no decision needed)
+
+These were clarified in kickoff discussion — recorded here so they are not re-litigated.
+
+| Topic | Alignment |
+|-------|-----------|
+| **Surface load (#6)** | One Surface GET → parallel module loaders → namespaced `modules.{key}` + composed UI shell. Ad-hoc GETs for dropdowns etc. only when needed — **not** client-side N+1 full merge. POST save → envelope → per-module update steps. |
+| **SDK (#8)** | Contract-first API clients via `core/tools/` generators — not required per-module npm packages like `@erganis/sdk-inventory`. Third parties typically use HTTP + generated client from OpenAPI. |
+| **Email (#11)** | Single implementation in `core/packages/email/`; Communications **consumes** it; password reset uses Core transport without enabling Communications. |
+
+---
+
+### Test plan — action required ([§20 #39](#20-open-questions))
+
+Kickoff decisions (P35 hybrid txn, P36 OIDC, module loader, schema-per-module, Public IDs, Phases 0–3) **require a formal test plan** — not ad-hoc manual checks alone.
+
+| Item | Detail |
+|------|--------|
+| **Deliverable** | `TEST_STRATEGY` via APM (`.apm/templates/TEST_STRATEGY.template.md`) |
+| **Timing** | Start with Phase 0 scaffold; add cases per phase |
+| **Scope** | Core Phases 0–3 + Documents module; Inventory module tests in follow-on slice |
+| **Backlog** | [§18 Test plan](#test-plan-required--20-39) |
+
+---
+
+## 23. Decision log
 
 | Date | Decision |
 |------|----------|
@@ -1462,11 +2348,22 @@ Candidates to validate loader + envelope + one Surface end-to-end:
 | 2025-06 | Consolidated planning into `erganis-product-plan.md`; `.apm/_WORKSPACE/` gitignored |
 | 2025-06 | Module catalog reshuffle: Planner+Tasks+Calendar, Communications, Inventory+tracking, Business/Reports split, Agora module in `agora/` |
 | 2025-06 | Users/roles in Core; Build owns drawing approval; read vs write API policy |
-| 2025-06 | Core design workshop backlog captured in §20 |
+| 2025-06 | Core design workshop backlog captured in §21 |
 | 2025-06 | IBC room-size / occupancy planner in **Build** module |
 | 2025-06 | Build **Tags** on drawing sets; optional Inventory links for install-day workflows |
 | 2025-06 | Core **trigger classes**, **event handlers**, **UI toolbox**; composition class system for cross-module UI |
 | 2025-06 | Design **adjacency diagrams**; Presentations customizable proposals (tax options); Inventory **alternatives**; Business **cost verification** |
-| 2025-06 | Design module **full phased catalog** (v1/v2/later) documented in §10 |
+| 2025-06 | Design module **full phased catalog** (v1/v2/later) documented in §11 |
 | 2025-06 | Studio **web + desktop** same build; offline local replica, sync, conflict resolution |
 | 2025-06 | External tool export/connect (Excel, Pinterest, Instagram); prioritize iterations by user need |
+| 2025-06 | **Companion** mobile app in **React Native** + TypeScript |
+| 2025-06 | **Scraper Services** in Core; consumers include Agora, **Mnemosyne** |
+| 2025-06 | **Mnemosyne** — historical styles reference; repo **`erganis-lyceum`**, path **`lyceum/`** (Lyceum = folder; Mnemosyne = product) |
+| 2025-06 | **Business** module exhaustive catalog incl. **budgeting**; deep-dive workshop before v1 |
+| 2025-06 | **Core kickoff workshop** — module loader (path + multi-registry), schema-per-module DB, prefixed ULID Public IDs, full envelope actions, session+JWT auth, custom Studio roles, Surface parallel load, 403 disabled modules, contract-first API tooling, Core email libraries |
+| 2025-06-12 | **P35 envelope rollback** — hybrid txn; orchestrator `DbUnitOfWork`; required `phase: db`; optional `post_commit`; `outcome` success/partial/failed; HTTP 200/422 |
+| 2025-06-12 | **P36 SSO** — OIDC v1 primary; domain JIT; minimal local fallback; SAML-ready `AuthProvider`; Communications mailbox OAuth separate |
+| 2025-06-12 | **P38 initial implementation** — Phases 0–3; Phase 2 stub envelope smoke (3C); Phase 3 Documents module (3A) in `studio/modules/`; Inventory module follow-on (not Core) |
+| 2025-06-12 | **P37 module inheritance** — deferred; Public ID invariant; Core contract validation + mapping tool; modules implement; granular disable in v1 |
+| 2025-06-12 | **P39 test plan** — Jest platform-wide; Testcontainers + CI Postgres; GitHub Actions build/test from Phase 0 |
+| 2025-06-12 | **Core kickoff complete** — P35–P39 decided; ready for Phase 0 implementation |

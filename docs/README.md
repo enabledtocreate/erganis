@@ -4,6 +4,19 @@
 
 - [erganis-product-plan.md](erganis-product-plan.md) — **Primary planning document** (vision, architecture, stack, modules, backlog, open questions)
 
+## Per-project documentation (temporary)
+
+Until APM generates managed docs per repo, each **submodule** has a local staging area:
+
+| Repo | Path |
+|------|------|
+| Core | `core/docs/temp/` |
+| Studio | `studio/docs/temp/` |
+| Agora | `agora/docs/temp/` |
+| Companion | `companion/docs/temp/` |
+
+Use these for drafts, ADRs, and implementation notes. Promote content via APM when templates are in use — do not treat `temp/` as long-term source of truth.
+
 ## Development
 
 - [DEPENDENCIES.md](DEPENDENCIES.md) — Repo references and API consumption

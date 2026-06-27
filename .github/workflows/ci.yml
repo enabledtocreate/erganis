@@ -3,12 +3,62 @@ name: CI
 
 on:
   push:
-    branches: [main, develop]
+    branches: [master, main, develop]
   pull_request:
-    branches: [main, develop]
+    branches: [master, main, develop]
 
 jobs:
-  test-submodules:
+  core:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: erganis
+          POSTGRES_PASSWORD: dev_password
+          POSTGRES_DB: erganis
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U erganis -d erganis"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      DATABASE_URL: postgresql://erganis:dev_password@localhost:5432/erganis
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Test Core contracts
+        run: |
+          cd core/contracts
+          npm ci
+          npm test
+
+      - name: Build and test Core platform package
+        run: |
+          cd core/packages/typescript
+          npm ci
+          npm run build
+          npm test
+
+      - name: Build and test Core services
+        run: |
+          cd core/packages/typescript && npm ci && npm run build
+          cd ../../services
+          npm ci
+          npm run build
+          npm test
+          npm run test:e2e
+
+  other-submodules:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -19,19 +69,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "20"
-          cache: "npm"
-
-      - name: Test Core (contracts, services, packages)
-        run: |
-          if [ -f core/contracts/package.json ]; then
-            cd core/contracts && npm ci && npm test && cd ../..
-          fi
-          if [ -f core/services/package.json ]; then
-            cd core/services && npm ci && npm test && cd ../..
-          fi
-          if [ -f core/packages/package.json ]; then
-            cd core/packages && npm ci && npm test && cd ../..
-          fi
 
       - name: Test studio
         run: |

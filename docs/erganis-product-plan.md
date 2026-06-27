@@ -2,7 +2,7 @@
 
 > **Status:** Pre-PRD planning document. Single source of truth until APM-managed documents (PRD, ARCHITECTURE, etc.) are generated from `.apm/templates/`.
 >
-> **Core kickoff:** **Complete** (Jun 2025) — ready to begin **Phase 0**. See [§21 Core readiness](#21-core-readiness--design-backlog).
+> **Core kickoff:** **Complete** (Jun 2025). **Phase 0 complete** (Jun 2025) — begin **Phase 1** (auth). See [§21 Core readiness](#21-core-readiness--design-backlog).
 >
 > **Do not** edit template output files (`ARCHITECTURE.md`, `PRD.md`, etc.) directly — use APM and fragment workflows. This plan will be broken into fragments when templates are ready.
 
@@ -1595,7 +1595,7 @@ User → Surface → Operation envelope → Orchestrator (lock) → Module steps
 
 Phases **0–3** — see [§6 Initial Core implementation scope](#initial-core-implementation-scope-decided--22-p38-first-core-vertical-slice):
 
-- [ ] **Phase 0** — Nest shell, Postgres, layered `core/services/` + `core/packages/`
+- [x] **Phase 0** — Nest shell, Postgres, layered `core/services/` + `core/packages/typescript/`
 - [ ] **Phase 1** — OIDC + local fallback, session, JWT, org, custom roles
 - [ ] **Phase 2 (3C)** — Module loader + hello-world stub + authenticated envelope smoke test
 - [ ] **Phase 3 (3A)** — **Documents** module (`studio/modules/documents/`) — upload, vault, envelope save
@@ -1606,7 +1606,7 @@ Phases **0–3** — see [§6 Initial Core implementation scope](#initial-core-i
 - [x] **Tooling locked** — Jest (Core, Nest, web, RN); Testing Library for UI
 - [x] **DB** — Testcontainers (local) + Postgres service container (GitHub Actions CI)
 - [x] **CI** — build + test steps in `.github/workflows/ci.yml` from Phase 0
-- [ ] Generate **TEST_STRATEGY** (APM template) when Phase 0 scaffold exists
+- [x] Generate **TEST_STRATEGY** (APM template) when Phase 0 scaffold exists — draft in [`core/docs/temp/TEST_STRATEGY.md`](../core/docs/temp/TEST_STRATEGY.md)
 - [ ] Auth tests — OIDC mock, domain JIT, local fallback, session, JWT
 - [ ] Orchestrator tests — txn rollback, `outcome: partial` vs `failed`, 409 lock conflict
 - [ ] Module loader tests — enable/disable, manifest compile, migrations stub
@@ -1895,10 +1895,11 @@ Use `Ex: TODO` in specs where behavior is not yet finalized.
 
 ### Core readiness — start here
 
-**Verdict:** Ready to begin **Phase 0** — Nest shell, Postgres, Jest, GitHub Actions CI in `core/services/`.
+**Verdict:** **Phase 0 complete.** Begin **Phase 1** — OIDC + local fallback auth, session/JWT, org + roles in `core/services/`.
 
 | Area | Status | Reference |
 |------|--------|-----------|
+| Phase 0 shell | **Done** | [`core/docs/temp/PHASE-0.md`](../core/docs/temp/PHASE-0.md) |
 | Envelope rollback & HTTP | **Decided** (P35) | [§13](#13-operation-envelope--orchestration), [§22 P35](#p35-envelope-partial-success-vs-full-failure) |
 | SSO / auth | **Decided** (P36) | [§6 Authentication](#authentication-decided--22-p36-sso-org-login-vs-communications-oauth), [§22 P36](#p36-sso-org-login-vs-communications-oauth) |
 | Module integration model | **Decided** (P37) | [§12](#module-inheritance-decided--22-p37-module-inheritance), [§22 P37](#p37-module-inheritance) |
@@ -1906,20 +1907,20 @@ Use `Ex: TODO` in specs where behavior is not yet finalized.
 | Test plan | **Decided** (P39) | [§6 Test plan](#test-plan-decided--22-p39--core-test-plan), [§22 P39](#p39--core-test-plan) |
 | Loader, Public IDs, DB, API composer, email | **Decided** (kickoff #1–#11) | [§12](#12-module-system--manifests), [§19](#19-resolved-decisions) |
 
-### What's left before beginning Core?
+### What's left (Phases 1–3)
 
-**Nothing from kickoff blocks Phase 0.** Refine the items below **while building** Phases 0–3 — they are not prerequisites to starting.
+**Phase 0 is complete.** Refine during implementation:
 
 | Item | Status | When to decide |
 |------|--------|----------------|
-| TEST_STRATEGY (APM doc from template) | Not written | When Phase 0 scaffold lands |
-| Core OpenAPI baseline | Partial | Phases 0–1 |
+| TEST_STRATEGY (APM doc) | Draft in [`core/docs/temp/TEST_STRATEGY.md`](../core/docs/temp/TEST_STRATEGY.md) | Promote via APM when ready |
+| Core OpenAPI baseline | Partial | Phase 1 |
 | Envelope JSON Schema + worked examples (Save Product, drawing approve) | Partial | Phases 2–3 |
 | Public API keys shape | Partial — JWT-only OK initially | Phase 1+ |
 | Documents v1 scope — org vault vs project-linked attachments | **Open** | **Before Phase 3** |
 | Studio + Client RBAC detail (roles → envelope actions) | Partial | Phase 1+ |
 
-Everything else in [§20](#20-open-questions) (Agora sync, Companion maps, desktop shell, Mnemosyne, Business budgeting, etc.) is **product/platform backlog** — not gating Core Phase 0.
+Everything else in [§20](#20-open-questions) is **product/platform backlog** — not gating Core.
 
 ### Implementation phases (Core + first module)
 
@@ -1927,7 +1928,7 @@ Matches [§6 Initial Core implementation scope](#initial-core-implementation-sco
 
 | Phase | Goal | Key deliverables |
 |-------|------|------------------|
-| **0** | Shell | Nest app in `core/services/`; Postgres; Jest; extend `.github/workflows/ci.yml` |
+| **0** | Shell | **Done** — Nest app, health, Postgres readiness, Jest CI |
 | **1** | Auth | OIDC + local fallback; org + users + roles; session/JWT |
 | **2** | Loader + smoke | Module loader lifecycle; stub envelope orchestration end-to-end |
 | **3** | First module | **Documents** in `studio/modules/documents/` — Inventory is a follow-on module slice, not Core |
@@ -1985,9 +1986,9 @@ Compact index — full P35–P39 narratives in [§22](#22-core-kickoff-decisions
 
 ### Suggested next steps
 
-1. **Phase 0** — Core Nest shell + Postgres + Jest + GitHub Actions CI
-2. Core OpenAPI baseline + auth module skeleton (Phase 1 prep)
-3. Envelope JSON Schema + worked examples (Phase 2)
+1. **Phase 1** — OIDC + local fallback, session/JWT, org + users + roles
+2. Core OpenAPI baseline expansion (auth routes)
+3. Envelope JSON Schema + worked examples (Phase 2 prep)
 4. Documents v1 scope workshop (before Phase 3)
 
 ### Plain-language reminder
@@ -2385,4 +2386,4 @@ Kickoff decisions (P35 hybrid txn, P36 OIDC, module loader, schema-per-module, P
 | 2025-06-12 | **P38 initial implementation** — Phases 0–3; Phase 2 stub envelope smoke (3C); Phase 3 Documents module (3A) in `studio/modules/`; Inventory module follow-on (not Core) |
 | 2025-06-12 | **P37 module inheritance** — deferred; Public ID invariant; Core contract validation + mapping tool; modules implement; granular disable in v1 |
 | 2025-06-12 | **P39 test plan** — Jest platform-wide; Testcontainers + CI Postgres; GitHub Actions build/test from Phase 0 |
-| 2025-06-12 | **Core kickoff complete** — P35–P39 decided; ready for Phase 0 implementation |
+| 2025-06-26 | **Phase 0 complete** — Nest shell in `core/services/`, `@erganis/platform`, health + Postgres readiness, Jest CI with Postgres service |

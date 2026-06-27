@@ -1687,7 +1687,7 @@ See [§6 Core remaining](#core-remaining-work):
 - [x] **C6** — FileStore (`LocalFileStore`, upload/download API) — [`PHASE-C6.md`](../core/docs/temp/PHASE-C6.md)
 - [x] **C7** — Surface API (parallel module loaders, composed load response) — [`PHASE-C7.md`](../core/docs/temp/PHASE-C7.md)
 - [x] **C8** — Public API JWT guard — [`PHASE-C8.md`](../core/docs/temp/PHASE-C8.md)
-- [x] **C9** — Outbox, job queue, operation audit log — [`PHASE-C9.md`](../core/docs/temp/PHASE-C9.md)
+- [x] **C9** — pg-boss jobs, outbox poller, FTS search, operation audit log — [`PHASE-C9.md`](../core/docs/temp/PHASE-C9.md)
 - [x] **C10** — UI toolbox / composition slot registry — [`PHASE-C10.md`](../core/docs/temp/PHASE-C10.md)
 - [x] **C11** — Sync API stub (pull/push, optimistic concurrency) — [`PHASE-C11.md`](../core/docs/temp/PHASE-C11.md)
 

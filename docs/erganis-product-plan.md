@@ -2,7 +2,7 @@
 
 > **Status:** Pre-PRD planning document. Single source of truth until APM-managed documents (PRD, ARCHITECTURE, etc.) are generated from `.apm/templates/`.
 >
-> **Core kickoff:** **Complete** (Jun 2025). **Phase 1 complete** (Jun 2025) — begin **Phase 2** (module loader). See [§21 Core readiness](#21-core-readiness--design-backlog).
+> **Core kickoff:** **Complete** (Jun 2025). **Core Phases C0–C2 complete** (Jun 2025). **Next:** finish remaining Core platform ([§6 Core remaining](#core-remaining-work)), then Studio modules per [§7 Studio module phases](#studio-module-implementation-phases). Architecture: [`core/docs/temp/CORE-ARCHITECTURE.md`](../core/docs/temp/CORE-ARCHITECTURE.md).
 >
 > **Do not** edit template output files (`ARCHITECTURE.md`, `PRD.md`, etc.) directly — use APM and fragment workflows. This plan will be broken into fragments when templates are ready.
 
@@ -377,20 +377,35 @@ flowchart TD
 - **Event handlers** — react to domain and platform events (outbox delivery, module lifecycle, cross-module notifications). Distinct from orchestrator **steps** (synchronous envelope) but may enqueue operations or jobs.
 - **Primary UI toolbox** — Core-owned composition system to assemble Erganis UI: layout regions, navigation shell, slot registry, theme tokens, dashboard/widget mounting. Modules contribute React components into slots; **Next.js + shadcn** in Studio render the assembled shell. Joined cross-module dashboards lean on **Reports** ([§11](#11-module-catalog)).
 
-See also: [§21 Core readiness](#core-readiness--start-here) · [Stack tier map](#stack-tier--repository-map) · [Initial implementation scope](#initial-core-implementation-scope-decided--22-p38-first-core-vertical-slice)
+See also: [§21 Core readiness](#core-readiness--start-here) · [Stack tier map](#stack-tier--repository-map) · [Core remaining](#core-remaining-work) · [Studio module phases](#studio-module-implementation-phases)
 
-### Initial Core implementation scope (decided — [§22 P38](#p38-first-core-vertical-slice))
+### Core implementation status
 
-All **Phases 0–3** are required for the first shippable Core + module path. **Domain modules live in `studio/modules/`** (or `agora/modules/`) — **not inside `core/`**. Core hosts, loads, and orchestrates them.
+**Domain modules are not in `core/`** — they live in `studio/modules/` (or `agora/modules/`). Core hosts, loads, and orchestrates them.
 
-| Phase | Repo | Delivers |
-|-------|------|----------|
-| **0 — Shell** | `core/` | Nest app, health, Postgres, layered `services/` + `packages/` |
-| **1 — Auth** | `core/` | OIDC + minimal local fallback, session, JWT, org context, admin + custom roles |
-| **2 — Loader + stub (3C)** | `core/` + `studio/modules/` | Module loader; **hello-world stub module**; authenticated **envelope smoke test** (orchestrator + stub step via `DbUnitOfWork`) |
-| **3 — Documents (3A)** | `studio/modules/documents/` (+ Core FileStore) | First real module: upload, vault, envelope save — loaded by Core |
+| Core phase | Status | Delivers | Doc |
+|------------|--------|----------|-----|
+| **C0 — Shell** | **Done** | Nest app, health, Postgres, layered `services/` + `packages/` | [`PHASE-0.md`](../core/docs/temp/PHASE-0.md) |
+| **C1 — Auth** | **Done** | OIDC + local fallback, session, JWT, org/users/roles, domain JIT | [`PHASE-1.md`](../core/docs/temp/PHASE-1.md) |
+| **C2 — Loader + orchestrator** | **Done** | DAL, module loader, Core migrator, orchestrator, hello-world envelope smoke | [`PHASE-2.md`](../core/docs/temp/PHASE-2.md) |
 
-**Not in initial scope:** **Inventory Save Product (3B)** — **Inventory is a Studio module** (`studio/modules/inventory/`), not Core. Schedule as **follow-on module slice** after Documents to exercise multi-step optional `post_commit` ([§13](#13-operation-envelope--orchestration)).
+### Core remaining work
+
+Finish **Core platform** before stacking Studio module UI. Ordered by dependency — later Studio modules assume these exist.
+
+| Core phase | Repo | Delivers | Blocks |
+|------------|------|----------|--------|
+| **C3 — Orchestrator hardening** | `core/` | Workflow locks; `409` on conflict; `outcome: partial` tests; `post_commit` step coverage; envelope JSON Schema + worked examples | Multi-step modules (Inventory) |
+| **C4 — Migration validation** | `core/` | Third-party mandatory `migrations/`; SQL schema allowlist; reject DDL on `platform.*` / first-party schemas ([§12](#module-migrations-decided)) | Marketplace / third-party enable |
+| **C5 — Module lifecycle** | `core/` | Enable/disable per org; `403 MODULE_DISABLED`; granular `contributions.*` disable; dependency graph on disable | Studio admin, production module toggles |
+| **C6 — FileStore** | `core/` | `LocalFileStore` (`ERGANIS_DATA_ROOT`); upload/download API; path conventions `{orgId}/…` | **Documents** module |
+| **C7 — Surface API** | `core/` | Surface GET — parallel module loaders; namespaced `modules.{key}` response; composed load contract | Studio web shell |
+| **C8 — Public API** | `core/` | JWT guard on public routes; API keys (shape TBD); OpenAPI baseline expansion | Companion, integrations |
+| **C9 — Platform services** | `core/` | pg-boss jobs; event outbox; search FTS adapter; operation audit log | Communications, Reports, scrapers |
+| **C10 — UI toolbox** | `core/` | Layout/slot registry; theme tokens; module UI contribution wiring | Studio composed shell |
+| **C11 — Sync API** | `core/` | Desktop offline replica protocol; conflict detection (`expectedVersion`); push/pull endpoints | Studio desktop |
+
+**Not Core:** Documents, Inventory, Design, Planner, etc. — see [§7 Studio module phases](#studio-module-implementation-phases).
 
 ### Test plan (decided — [§22 P39](#p39--core-test-plan))
 
@@ -400,7 +415,7 @@ All **Phases 0–3** are required for the first shippable Core + module path. **
 
 | Area | Runner / libraries | Notes |
 |------|-------------------|--------|
-| **Core** (`core/`) | **Jest** + Nest testing utilities | Nest default; recommended for Core Phases 0–3 |
+| **Core** (`core/`) | **Jest** + Nest testing utilities | Nest default; Core C0–C11 |
 | **Nest backends** (Core, `studio/modules/*`, `agora/api`, module servers) | **Jest** | Same runner everywhere server-side TypeScript runs |
 | **Web frontend** (Studio, Client, Agora web, Lyceum web) | **Jest** + **Testing Library** | One platform runner; Next.js-compatible |
 | **Companion** (React Native) | **Jest** + Testing Library RN | Same runner family — avoid Vitest/Jest split unless a future constraint forces it |
@@ -437,19 +452,49 @@ All **Phases 0–3** are required for the first shippable Core + module path. **
 
 Per-submodule repos may mirror the same pattern in their own `.github/workflows/` when split from monorepo parent CI.
 
-#### Minimum cases (Phases 0–3)
+#### Minimum cases (Core C0–C2 done; expand through C3–C11)
 
-OIDC + domain JIT + local fallback; session/JWT; orchestrator txn rollback vs `partial` / `failed`; 409 lock conflict; module loader enable/disable; stub envelope smoke; Documents save + FileStore; 403 disabled module (when routes exist).
+OIDC + domain JIT + local fallback; session/JWT; orchestrator txn rollback vs `partial` / `failed`; 409 lock conflict; module loader enable/disable; stub envelope smoke; migration validation; FileStore; Surface load; Documents save (Studio S-Documents); 403 disabled module.
 
 #### Locations
 
-`core/infrastructure/tests/` · `core/services/**/*.spec.ts` · `studio/modules/documents/` · extend [§18 Test plan backlog](#test-plan-required--20-39)
+`core/infrastructure/tests/` · `core/services/**/*.spec.ts` · `studio/modules/**` · extend [§18 Test plan backlog](#test-plan-required--20-39)
 
 ---
 
 ## 7. Studio
 
 **GitHub:** `erganis-studio` · **Role:** Designer studio, client portal, first-party and third-party modules.
+
+> **Implementation order:** Complete [Core remaining](#core-remaining-work) **C3–C7** (orchestrator hardening, FileStore, Surface API) before the first real Studio module ships end-to-end in the UI. Module **backend handlers** can start once **C2** is done (hello-world proves the path).
+
+### Studio module implementation phases
+
+Each first-party module ships in **slices** — schema + handlers first (Nest module loaded by Core), then Surface UI contributions in `studio/apps/studio`. Rank slices by user need ([§1](#feature-prioritization-how-to-read-this-plan)).
+
+| Studio phase | Module | Repo path | Slice | Delivers | Core deps |
+|--------------|--------|-----------|-------|----------|-----------|
+| **Ref** | Hello-world | `studio/modules/hello-world/` | — | Stub handler + envelope smoke (**done**) | C2 |
+| **S0 — Shell** | Studio app | `studio/apps/studio/`, `studio/shared/` | 0 | Next.js shell, shadcn tokens, generated API client, login flow to Core auth | C1 |
+| **S-D1** | **Documents** | `studio/modules/documents/` | 1 | `documents.*` schema + `migrations/`; upload metadata; vault list API; envelope `save` handler | C2, **C6 FileStore** |
+| **S-D2** | Documents | same | 2 | Project-linked attachments; Surface `documents` load; vault UI slot | C7 Surface API, S0 |
+| **S-D3** | Documents | same | 3 | Client portal read-only vault view; trade-doc templates | S0 client app, RBAC |
+| **S-I1** | **Inventory** | `studio/modules/inventory/` | 1 | Product/material CRUD; `inventory.*` schema; envelope `save` (required `phase: db`) | C2, C6 optional |
+| **S-I2** | Inventory | same | 2 | **Product alternatives**; multi-step save with optional `post_commit`; `outcome: partial` | **C3** orchestrator hardening |
+| **S-I3** | Inventory | same | 3 | Shipment tracking hooks; Presentations composition blocks | Presentations S-P1 |
+| **S-P1** | **Planner** | `studio/modules/planner/` | 1 | Tasks (daily todo); Kanban board; envelope save | C2, C7 |
+| **S-P2** | Planner | same | 2 | Calendar / scheduling; iCal consume from Communications | Communications S-C1 |
+| **S-C1** | **Communications** | `studio/modules/communications/` | 1 | Mailbox OAuth (separate from org SSO); thread list | C1, C9 jobs |
+| **S-Des1** | **Design** | `studio/modules/design/` | 1 | Spaces, palettes, mood boards ([Design v1](#design)) | C2, C7 |
+| **S-Pr1** | **Presentations** | `studio/modules/presentations/` | 1 | Proposal builder; Inventory/Design composition blocks | Inventory S-I1, Design S-Des1 |
+| **S-B1** | **Build** | `studio/modules/build/` | 1 | Drawing vault refs; Tags on sets; approval envelope | Documents S-D1, C3 locks |
+| **S-Bus1** | **Business** | `studio/modules/business/` | 1 | Budgeting skeleton; cost verification hooks | Reports S-R1 later |
+| **S-R1** | **Reports** | `studio/modules/reports/` | 1 | Registered data emissions; cross-module dashboards | Multiple modules emitting |
+| **S-N1** | **Notes** | `studio/modules/notes/` | 1 | Meeting notes; link to Documents/Communications | C2 |
+| **S-Ago1** | **Agora (org)** | `agora/modules/` | 1 | Org vendor list; trade account status; Core sync | Agora API, C2 |
+| **S-3P** | Third-party | `studio/modules/third-party/` | — | Mandatory `migrations/`; own schema only; API-first ([§12](#module-migrations-decided)) | **C4** validation |
+
+**Follow-on (not sequenced yet):** Lyceum/Mnemosyne content module, Companion-specific Public API surfaces, Studio desktop offline (depends on Core **C11** + S0).
 
 ### Layout
 
@@ -1035,12 +1080,12 @@ Earlier planning considered a standalone **Tools** module. **Decided:** IBC room
 - **Runtime:** `erganis.module.json` (compiled)
 - **Validation:** JSON Schema in `core/contracts/schemas/module/`
 
-On **download, enable, or upgrade**, Core runs:
+On **download, enable, or upgrade**, Core runs (via **Core migrator only** — modules cannot self-apply):
 
-- **migrations** — schema extensions
-- **installScripts** — seed data, indexes
+- **migrations** — schema extensions declared in manifest `migrations[]`, executed from the module’s **`migrations/`** folder ([§12 Module migrations](#module-migrations-decided))
+- **installScripts** — seed data, indexes (also Core-initiated; no bypass)
 
-Modules may extend surfaces, add validation, contribute UI/workflow/jobs, and **register API routes** (see [§14](#14-api-layers--contracts)). Must **not** mutate another module's storage directly.
+Modules may extend surfaces, add validation, contribute UI/workflow/jobs, and **register API routes** (see [§14](#14-api-layers--contracts)). Must **not** mutate another module's storage directly — third-party modules are **forbidden** from DDL or DML against first-party schemas.
 
 Third-party modules: `studio/modules/third-party/`. First-party Agora org module: `agora/modules/`.
 
@@ -1084,7 +1129,43 @@ Core libraries **discover, validate, and plug in** modules for Erganis-hosted ap
 | **First vs third party** | First-party module schemas hold firm data; third-party extensions use separate schemas or API-only integration — avoids commingling tables |
 | **Core platform** | `core` schema (or `platform`) for users, orgs, roles, operation log, module enablement |
 
-Migrations run per module on enable/upgrade via Core migrator.
+Migrations run per module on enable/upgrade via **Core migrator only** — see [Module migrations (decided)](#module-migrations-decided) below.
+
+### Module migrations (decided)
+
+**Principle:** Core **owns discovery, validation, ordering, execution, and audit** of all module DDL. Third-party and first-party modules **declare** migration files in the manifest; they **never** apply schema changes themselves (no startup DDL, no bundled `psql`, no bypass of Core). This prevents third-party code from modifying platform or first-party tables outside Core’s controls.
+
+| Concern | Decision |
+|---------|----------|
+| **Who runs migrations** | **Core only** — `ModuleMigrationService` (loader) on enable/upgrade/startup; records versions in `platform.module_migrations` |
+| **Who validates** | **Core only** — manifest compile + migration path checks at load; SQL allowlist / schema guard (**Core C4**) before execute |
+| **Manifest contract** | Each migration entry: `{ version, path }` pointing at a file under the module’s **`migrations/`** folder |
+| **Platform DDL** | **`core/data/migrations/`** only — modules cannot migrate `platform.*` or other Core schemas |
+
+#### Migration folder rules by module class
+
+| Module class | Location | `migrations/` folder | Notes |
+|--------------|----------|----------------------|--------|
+| **First-party** | `studio/modules/{name}/`, `agora/modules/` | **Single** `migrations/` directory per module | One folder is enough — you develop these modules; version all DDL there as the module evolves. Folder may start empty for stub-only modules (e.g. hello-world). |
+| **Third-party** | `studio/modules/third-party/{vendor}/` | **Mandatory** `migrations/` directory | Must exist at package root before enable. Core **rejects** third-party modules without it. Even API-only integrations ship at least a schema-bootstrap or no-op migration set so audit and ownership rules are uniform. |
+
+#### Schema ownership & forbidden DDL
+
+| Actor | Allowed | Forbidden |
+|-------|---------|-----------|
+| **First-party module** | DDL in **own module schema** only (e.g. `documents.*`, `inventory.*`) | Direct DDL on `platform.*`, another module’s schema, or cross-module FKs |
+| **Third-party module** | DDL in **own dedicated schema** only (separate from first-party firm data) | **Any** DDL touching first-party module schemas, `platform.*`, or schemas not declared as owned by that module |
+| **All modules** | Data access to first-party domains via **Public ID + envelope/API** | `INSERT`/`UPDATE`/`DELETE`/`ALTER` on first-party tables — integration is orchestration, not shared-table writes |
+
+Core validation (rolled out incrementally):
+
+| Phase | Migration enforcement |
+|-------|----------------------|
+| **Phase 2 (done)** | Core runs manifest-listed SQL in order; tracks applied versions; platform migrations run before module migrations |
+| **Phase 3+** | Mandatory third-party `migrations/` check; static SQL review (schema allowlist, block `platform` and foreign schemas for third-party); reject enable on violation — **Core C4** |
+| **Later** | Signed migration bundles for marketplace; optional dry-run in Studio admin before enable |
+
+See [§6 Core remaining](../../../docs/erganis-product-plan.md#core-remaining-work) · [§7 Studio module phases](../../../docs/erganis-product-plan.md#studio-module-implementation-phases) · [`PHASE-2.md`](./PHASE-2.md) · [§11 Implementation examples](./CORE-ARCHITECTURE.md#11-implementation-examples)
 
 ### Cross-module data references (decided)
 
@@ -1113,6 +1194,8 @@ See [§13 orchestrator transaction library](#orchestrator-transaction-library-de
 ```
 studio/modules/inventory/
 ├── erganis.module.yaml
+├── migrations/                # first-party: single migrations folder (all DDL versions)
+│   └── 001_inventory.sql
 ├── src/
 │   ├── inventory.module.ts    # Nest DynamicModule export
 │   ├── handlers/              # Orchestrator step handlers
@@ -1591,15 +1674,40 @@ User → Surface → Operation envelope → Orchestrator (lock) → Module steps
 
 > **Prioritization:** Items below are captured ideas — **not** delivery order. Rank each iteration by **biggest user needs** before scheduling ([§1](#feature-prioritization-how-to-read-this-plan)).
 
-### Core — initial implementation (P38 — in progress)
+### Core — platform (C0–C11 complete)
 
-Phases **0–3** — see [§6 Initial Core implementation scope](#initial-core-implementation-scope-decided--22-p38-first-core-vertical-slice):
+See [§6 Core remaining](#core-remaining-work):
 
-- [x] **Phase 0** — Nest shell, Postgres, layered `core/services/` + `core/packages/typescript/`
-- [x] **Phase 1** — OIDC + local fallback, session, JWT, org, custom roles — [`core/docs/temp/PHASE-1.md`](../core/docs/temp/PHASE-1.md)
-- [ ] **Phase 2 (3C)** — DAL base classes (`BaseRepository`, `DbUnitOfWork`) + module loader + hello-world stub + authenticated envelope smoke test
-- [ ] **Phase 3 (3A)** — **Documents** module (`studio/modules/documents/`) — upload, vault, envelope save
-- [ ] **Follow-on module slice** — Inventory Save Product (`studio/modules/inventory/`) — multi-step optional `post_commit` (not Core)
+- [x] **C0** — Nest shell, Postgres, layered `core/services/` + `core/packages/typescript/`
+- [x] **C1** — OIDC + local fallback, session, JWT, org, custom roles — [`PHASE-1.md`](../core/docs/temp/PHASE-1.md)
+- [x] **C2** — DAL + module loader + orchestrator + hello-world envelope smoke — [`PHASE-2.md`](../core/docs/temp/PHASE-2.md)
+- [x] **C3** — Orchestrator hardening (locks, partial/failed, envelope JSON Schema) — [`PHASE-C3.md`](../core/docs/temp/PHASE-C3.md)
+- [x] **C4** — Migration validation (third-party mandatory folder, schema allowlist) — [`PHASE-C4.md`](../core/docs/temp/PHASE-C4.md)
+- [x] **C5** — Module enable/disable per org; granular contributions disable — [`PHASE-C5.md`](../core/docs/temp/PHASE-C5.md)
+- [x] **C6** — FileStore (`LocalFileStore`, upload/download API) — [`PHASE-C6.md`](../core/docs/temp/PHASE-C6.md)
+- [x] **C7** — Surface API (parallel module loaders, composed load response) — [`PHASE-C7.md`](../core/docs/temp/PHASE-C7.md)
+- [x] **C8** — Public API JWT guard — [`PHASE-C8.md`](../core/docs/temp/PHASE-C8.md)
+- [x] **C9** — Outbox, job queue, operation audit log — [`PHASE-C9.md`](../core/docs/temp/PHASE-C9.md)
+- [x] **C10** — UI toolbox / composition slot registry — [`PHASE-C10.md`](../core/docs/temp/PHASE-C10.md)
+- [x] **C11** — Sync API stub (pull/push, optimistic concurrency) — [`PHASE-C11.md`](../core/docs/temp/PHASE-C11.md)
+
+### Studio — modules (per-module slices)
+
+See [§7 Studio module phases](#studio-module-implementation-phases):
+
+- [x] **Ref** — hello-world stub (`studio/modules/hello-world/`)
+- [ ] **S0** — Studio web shell + shared API client + login
+- [ ] **S-D1–D3** — Documents (schema, vault save, Surface UI, client portal)
+- [ ] **S-I1–I3** — Inventory (CRUD, alternatives/multi-step, Presentations hooks)
+- [ ] **S-P1–P2** — Planner (Tasks/Kanban, calendar)
+- [ ] **S-C1** — Communications (mailbox OAuth)
+- [ ] **S-Des1** — Design v1 (spaces, palettes, mood boards)
+- [ ] **S-Pr1** — Presentations (proposal builder)
+- [ ] **S-B1** — Build (drawings, tags, approvals)
+- [ ] **S-Bus1** — Business (budgeting skeleton)
+- [ ] **S-R1** — Reports (data emissions)
+- [ ] **S-N1** — Notes
+- [ ] **S-Ago1** — Agora org module (`agora/modules/`)
 
 ### Test plan (decided — [§22 P39](#p39--core-test-plan))
 
@@ -1609,9 +1717,9 @@ Phases **0–3** — see [§6 Initial Core implementation scope](#initial-core-i
 - [x] Generate **TEST_STRATEGY** (APM template) when Phase 0 scaffold exists — draft in [`core/docs/temp/TEST_STRATEGY.md`](../core/docs/temp/TEST_STRATEGY.md)
 - [x] Auth tests — OIDC mock, domain JIT, local fallback, session, JWT
 - [ ] Orchestrator tests — txn rollback, `outcome: partial` vs `failed`, 409 lock conflict
-- [ ] Module loader tests — enable/disable, manifest compile, migrations stub
+- [ ] Module loader tests — enable/disable, manifest compile; migration validation (mandatory third-party `migrations/`, schema allowlist, block first-party DDL)
 - [ ] Documents module integration tests — envelope save, FileStore paths
-- [ ] Stub module envelope smoke (Phase 2)
+- [x] Stub module envelope smoke (Phase 2)
 
 ### Platform / Studio
 - [ ] Studio **desktop** shell — same build as web
@@ -1777,7 +1885,7 @@ Full catalog: [§11 Business](#business). Phased backlog — **budgeting deep di
 | Stack | NestJS (server), Next.js + shadcn + Tailwind (web client), PostgreSQL, pg-boss, LocalFileStore v1, MapLibre, OpenAPI-first |
 | Core role | Universal foundation — not Studio-only |
 | Studio + Client data | Same Core PostgreSQL (**engagement model TBD**) |
-| Module install | DB migrations on enable via Core migrator |
+| Module install | DB migrations on enable via **Core migrator only**; third-party mandatory `migrations/`; forbidden first-party/`platform` DDL ([§12](#module-migrations-decided)) |
 | Studio UI | Next.js + shadcn/ui + Tailwind in `studio/shared/` |
 | Business scope | **Budgeting**, billing, taxes, cost verification, CRM/finance — full catalog §11; deep dive TBD |
 | Scraper Services | **Core** — modular URL/XPath scrape recipes; Agora, Mnemosyne, future |
@@ -1808,7 +1916,7 @@ Full catalog: [§11 Business](#business). Phased backlog — **budgeting deep di
 | Business cost verify | **Cost verification** for accurate charging; ties to proposals and Inventory |
 | Inventory alternatives | Grouped product options (price, lead time) embeddable in Presentations |
 | Design scope | Full catalog in §11 — creativity/intent; not client delivery or construction docs |
-| **Core kickoff — module loader** | Path config v1 + **multi-registry packages** (npm, NuGet, …); first-party `studio/modules/`, third-party `studio/modules/third-party/`; `core/tools/` contract generators |
+| **Core kickoff — module loader** | Path config v1 + **multi-registry packages** (npm, NuGet, …); first-party `studio/modules/`, third-party `studio/modules/third-party/`; `core/tools/` contract generators; **Core-owned migrator** — third-party **mandatory** `migrations/`, first-party **single** `migrations/` folder; third-party **forbidden** from first-party/`platform` DDL ([§12](#module-migrations-decided)) |
 | **Core kickoff — DB layout** | **Schema per module** + org delineation; third-party via API/orchestration, separate from first-party tables |
 | **Core kickoff — Public IDs** | Prefixed **ULID**: `{type}_{ulid}` (e.g. `prod_01J…`) |
 | **Core kickoff — envelope actions** | Full action enum: `load`, `save`, `draft`, `archive`, `approve`, `sync` |
@@ -1822,7 +1930,7 @@ Full catalog: [§11 Business](#business). Phased backlog — **budgeting deep di
 | **Core kickoff — email** | **Core email libraries** implement transport; Communications module **uses** them; password reset / ops mail **without** enabling Communications |
 | **Core kickoff — envelope rollback (P35)** | **Hybrid:** shared txn for required `phase: db` steps; optional `post_commit`; `outcome` success/partial/failed; HTTP 200/422; **Core libraries manage transactions** — modules use injected unit of work |
 | **Core kickoff — SSO (P36)** | **OIDC in v1** (primary); minimal **local** fallback; **domain JIT** provisioning; **SAML-ready** provider interface (SAML deferred); Communications mailbox OAuth separate |
-| **Core kickoff — initial implementation (P38)** | **Phases 0–3 all required:** shell → auth → loader/stub envelope smoke (3C) → **Documents module** (3A) in `studio/modules/`; **Inventory deferred** (module follow-on, not Core) |
+| **Core kickoff — initial implementation (P38)** | Core **C0–C2 done**; Core **C3–C11** remaining; Studio **per-module slices** — Documents = **S-D1** ([§6](#core-remaining-work), [§7](#studio-module-implementation-phases)) |
 | **Core kickoff — module inheritance (P37)** | **Deferred** — use contracts + orchestrator + Core **mapping tool**; Public IDs invariant; Core validates, modules implement |
 | **Core kickoff — test plan (P39)** | **Jest** platform-wide; Testcontainers (local) + Postgres service (CI); GitHub Actions build/test steps from Phase 0; TEST_STRATEGY at Phase 0 scaffold |
 
@@ -1843,18 +1951,18 @@ Full catalog: [§11 Business](#business). Phased backlog — **budgeting deep di
 | Category | Blocks Phase 0? |
 |----------|-----------------|
 | **Kickoff (P35–P39)** | **No** — complete |
-| **Refine during Phases 0–3** | No — decide while building ([below](#refine-during-core-phases-03-not-blocking-start)) |
+| **Refine during Core C3–C11 / Studio S0+** | No — decide while building ([below](#refine-during-core-phases-not-blocking-start)) |
 | **Core platform (later)** | No — [below](#core-platform--later-not-blocking-phase-0) |
 | **Product / other repos** | No — [below](#product--other-repos-not-blocking-core) |
 
-### Refine during Core Phases 0–3 (not blocking start)
+### Refine during Core / Studio build (not blocking start)
 
 | # | Topic | Status | When needed |
 |---|-------|--------|-------------|
-| 1 | Envelope JSON Schema + worked examples | **Partial** | Phase 2–3 |
-| 3 | Documents v1 — vault vs project-linked | **Open** | Phase 3 |
-| 8 | Studio + Client RBAC paths | **Partial** | Phase 1+ |
-| 19 | Public API keys | **Partial** | Phase 1+ |
+| 1 | Envelope JSON Schema + worked examples | **Partial** | **Core C3** |
+| 3 | Documents v1 — vault vs project-linked | **Open** | Before **Studio S-D1** |
+| 8 | Studio + Client RBAC paths | **Partial** | Studio S0+ |
+| 19 | Public API keys | **Partial** | **Core C8** |
 
 ### Core platform — later (not blocking Phase 0)
 
@@ -1895,44 +2003,47 @@ Use `Ex: TODO` in specs where behavior is not yet finalized.
 
 ### Core readiness — start here
 
-**Verdict:** **Phase 1 complete.** Begin **Phase 2** — module loader + hello-world stub + authenticated envelope smoke test in `core/services/`.
+**Verdict:** **Core C0–C2 complete.** Finish **Core C3–C7** (orchestrator hardening, FileStore, Surface API), then **Studio S0 + S-D1** (Documents backend). See [`CORE-ARCHITECTURE.md`](../core/docs/temp/CORE-ARCHITECTURE.md) for implementation examples.
 
 | Area | Status | Reference |
 |------|--------|-----------|
-| Phase 0 shell | **Done** | [`core/docs/temp/PHASE-0.md`](../core/docs/temp/PHASE-0.md) |
-| Phase 1 auth | **Done** | [`core/docs/temp/PHASE-1.md`](../core/docs/temp/PHASE-1.md) |
+| Core C0 shell | **Done** | [`PHASE-0.md`](../core/docs/temp/PHASE-0.md) |
+| Core C1 auth | **Done** | [`PHASE-1.md`](../core/docs/temp/PHASE-1.md) |
+| Core C2 loader + orchestrator | **Done** | [`PHASE-2.md`](../core/docs/temp/PHASE-2.md) |
+| Core C3–C11 remaining | **Next** | [§6 Core remaining](#core-remaining-work) |
+| Studio module slices | **After Core C6–C7** | [§7 Studio module phases](#studio-module-implementation-phases) |
 | Envelope rollback & HTTP | **Decided** (P35) | [§13](#13-operation-envelope--orchestration), [§22 P35](#p35-envelope-partial-success-vs-full-failure) |
 | SSO / auth | **Decided** (P36) | [§6 Authentication](#authentication-decided--22-p36-sso-org-login-vs-communications-oauth), [§22 P36](#p36-sso-org-login-vs-communications-oauth) |
 | Module integration model | **Decided** (P37) | [§12](#module-inheritance-decided--22-p37-module-inheritance), [§22 P37](#p37-module-inheritance) |
-| Initial implementation phasing | **Decided** (P38) | [§6](#initial-core-implementation-scope-decided--22-p38-first-core-vertical-slice), [§22 P38](#p38-first-core-vertical-slice) |
+| Initial implementation phasing | **Decided** (P38) | [§6 Core remaining](#core-remaining-work), [§7 Studio modules](#studio-module-implementation-phases), [§22 P38](#p38-first-core-vertical-slice) |
 | Test plan | **Decided** (P39) | [§6 Test plan](#test-plan-decided--22-p39--core-test-plan), [§22 P39](#p39--core-test-plan) |
 | Loader, Public IDs, DB, API composer, email | **Decided** (kickoff #1–#11) | [§12](#12-module-system--manifests), [§19](#19-resolved-decisions) |
 
-### What's left (Phases 1–3)
+### What's left
 
-**Phase 0 is complete.** Refine during implementation:
+**Core (platform):** [§6 Core remaining](#core-remaining-work) — C3 through C11.
+
+**Studio (modules):** [§7 Studio module phases](#studio-module-implementation-phases) — S0 shell, then Documents S-D1 as first real module.
 
 | Item | Status | When to decide |
 |------|--------|----------------|
-| TEST_STRATEGY (APM doc) | Draft in [`core/docs/temp/TEST_STRATEGY.md`](../core/docs/temp/TEST_STRATEGY.md) | Promote via APM when ready |
-| Core OpenAPI baseline | Partial | Phase 1 |
-| Envelope JSON Schema + worked examples (Save Product, drawing approve) | Partial | Phases 2–3 |
-| Public API keys shape | Partial — JWT-only OK initially | Phase 1+ |
-| Documents v1 scope — org vault vs project-linked attachments | **Open** | **Before Phase 3** |
-| Studio + Client RBAC detail (roles → envelope actions) | Partial | Phase 1+ |
+| TEST_STRATEGY (APM doc) | Draft in [`TEST_STRATEGY.md`](../core/docs/temp/TEST_STRATEGY.md) | Promote via APM when ready |
+| Core OpenAPI baseline | Partial | C8 |
+| Envelope JSON Schema + worked examples | Partial | **C3** |
+| Public API keys shape | Partial — JWT-only OK initially | C8 |
+| Documents v1 scope — org vault vs project-linked attachments | **Open** | **Before S-D1** |
+| Studio + Client RBAC detail (roles → envelope actions) | Partial | S0 / C5 |
 
-Everything else in [§20](#20-open-questions) is **product/platform backlog** — not gating Core.
+Everything else in [§20](#20-open-questions) is **product/platform backlog** — not gating the next Core slice.
 
-### Implementation phases (Core + first module)
+### Implementation track (Core vs Studio)
 
-Matches [§6 Initial Core implementation scope](#initial-core-implementation-scope-decided--22-p38-first-core-vertical-slice):
+| Track | Done | Next |
+|-------|------|------|
+| **Core** | C0 shell, C1 auth, C2 loader + orchestrator | **C3** orchestrator hardening → **C6** FileStore → **C7** Surface API |
+| **Studio** | hello-world ref module | **S0** shell → **S-D1** Documents backend (after C6) |
 
-| Phase | Goal | Key deliverables |
-|-------|------|------------------|
-| **0** | Shell | **Done** — Nest app, health, Postgres readiness, Jest CI |
-| **1** | Auth | OIDC + local fallback; org + users + roles; session/JWT |
-| **2** | Loader + smoke | Module loader lifecycle; stub envelope orchestration end-to-end |
-| **3** | First module | **Documents** in `studio/modules/documents/` — Inventory is a follow-on module slice, not Core |
+Legacy P38 “Phases 0–3” map: C0–C2 = Core done; old “Phase 3 Documents” = **Studio S-D1** + Core **C6** FileStore.
 
 ### Design layers (ongoing)
 
@@ -1963,8 +2074,8 @@ flowchart LR
 | **G. Trigger classes & event handlers** | **Open** | Taxonomy + manifest registration — refine with first real workflows |
 | **H. Studio offline sync & conflicts** | **Open** | Local replica, conflict UX — [§20 #30](#core-platform--later-not-blocking-phase-0) |
 | **I. Communications vs Core email** | **Resolved** | Core transport libraries; Communications consumes — [§19](#19-resolved-decisions) |
-| **J. Cross-cutting services** | **Partial** | FileStore, outbox, search FTS v1 — implement incrementally Phases 0–3 |
-| **K. First vertical slice** | **Resolved** | Phases 0–3; Documents module — [§22 P38](#p38-first-core-vertical-slice) |
+| **J. Cross-cutting services** | **Partial** | FileStore, outbox, search FTS v1 — Core **C6–C9** |
+| **K. First vertical slice** | **Partial** | Core C0–C2 done; Documents = Studio S-D1 + Core C6 — [§7](#studio-module-implementation-phases) |
 | **L. Scraper Services** | **Open** | Recipe schema, legal/ToS — [§20 #33](#core-platform--later-not-blocking-phase-0) |
 
 ### Kickoff quick reference (#1–#11)
@@ -1982,15 +2093,17 @@ Compact index — full P35–P39 narratives in [§22](#22-core-kickoff-decisions
 | 7 | API composer | 403 `MODULE_DISABLED`; granular disable v1 |
 | 8 | SDK | Contract-first via `core/tools/`; dynamic web module loading |
 | 9 | Nest layout | Hybrid — platform modules with controllers/application/domain/infrastructure |
-| 10 | Vertical slice | Phases 0–3; Documents in Phase 3 (P38) |
+| 10 | Vertical slice | Core C0–C2 done; Studio S-D1 Documents + Core C6 FileStore next |
 | 11 | Email | Core transport libraries; Communications consumes |
 
 ### Suggested next steps
 
-1. **Phase 1** — OIDC + local fallback, session/JWT, org + users + roles
-2. Core OpenAPI baseline expansion (auth routes)
-3. Envelope JSON Schema + worked examples (Phase 2 prep)
-4. Documents v1 scope workshop (before Phase 3)
+1. **Core C3** — orchestrator locks, partial/failed tests, envelope JSON Schema
+2. **Core C6** — FileStore (unblocks Documents)
+3. **Core C7** — Surface API parallel loaders
+4. **Studio S0** — web shell + login against Core auth
+5. **Studio S-D1** — Documents schema + envelope save handler
+6. Documents v1 scope workshop (vault vs project-linked — before S-D1 UI)
 
 ### Plain-language reminder
 
@@ -2240,7 +2353,7 @@ Full specification: [§6 Test plan](#test-plan-decided--22-p39--core-test-plan).
 | **Integration** | 1+ | OIDC (mock IdP), domain JIT, local fallback, session, JWT |
 | **Integration** | 2+ | Module loader enable/disable; stub module; envelope smoke; 409 / 422 |
 | **Integration** | 3+ | Documents save + FileStore; org RBAC on routes |
-| **E2E** | After Studio wired | Login → upload (not blocking Core Phase 3) |
+| **E2E** | After Studio wired | Login → upload (Studio **S-D2** + Core **C6**) |
 
 #### Minimum test cases (must cover)
 
@@ -2275,47 +2388,58 @@ Full specification: [§6 Test plan](#test-plan-decided--22-p39--core-test-plan).
 
 ### P38 — First Core vertical slice
 
-**§20 #38** · **Kickoff #10** · **Status:** **Decided** (2025-06-12)
+**§20 #38** · **Kickoff #10** · **Status:** **Partial** — Core track **C0–C2 complete** (2025-06); Studio modules are a **separate track** ([§7](#studio-module-implementation-phases)).
 
-**Context:** What to build **first** to validate Core + module loading — not the full product roadmap. **Domain modules are not part of the `core/` repo**; Core hosts the runtime, orchestrator, auth, and loader. First-party modules (Documents, Inventory, …) live under **`studio/modules/`**.
+**Context:** What to build **first** to validate Core + module loading. **Domain modules are not part of the `core/` repo**; Core hosts the runtime, orchestrator, auth, and loader. First-party modules live under **`studio/modules/`**.
 
-#### Decision summary
+#### Decision summary (updated)
 
 | Area | Choice |
 |------|--------|
-| **Scope** | **All Phases 0–3** required before broader module work |
-| **Phase 0** | Nest shell, Postgres, layered `core/services/` + `core/packages/` |
-| **Phase 1** | Auth: OIDC v1 + minimal local fallback, session, JWT, org, custom roles ([§6 Authentication](#authentication-decided--22-p36-sso-org-login-vs-communications-oauth)) |
-| **Phase 2 (3C)** | **DAL:** `BaseRepository` + `DbUnitOfWork` in `@erganis/platform`; `@erganis/dal-postgres` adapters. Module loader + **hello-world stub** in `studio/modules/` + **authenticated envelope smoke test** (orchestrator + stub `phase: db` step) |
-| **Phase 3 (3A)** | **Documents** first-party module — `studio/modules/documents/` — upload/vault/envelope save; Core **FileStore** |
-| **Not now (3B)** | **Inventory Save Product** — **Inventory is a Studio module**, not Core; follow-on slice after Documents for multi-step optional `post_commit` |
-| **Test plan** | Formal **TEST_STRATEGY** required — [§6 Test plan](#test-plan-action-required) |
+| **Core track** | **C0–C2 done** — shell, auth, loader, orchestrator, envelope smoke |
+| **Core next** | **C3–C7** — orchestrator hardening, migration validation, FileStore, Surface API ([§6](#core-remaining-work)) |
+| **Studio track** | Per-module slices — **S-D1 Documents** first real module after Core **C6** ([§7](#studio-module-implementation-phases)) |
+| **Not now** | Inventory multi-step (**S-I2**) until Core **C3** partial/post_commit is solid |
+| **Test plan** | Formal **TEST_STRATEGY** — draft exists; expand per Core/Studio phase |
 
-Full phase table: [§6 Initial Core implementation scope](#initial-core-implementation-scope-decided--22-p38-first-core-vertical-slice).
+Full tables: [§6 Core remaining](#core-remaining-work) · [§7 Studio module phases](#studio-module-implementation-phases).
 
-#### Implementation phases
+#### Implementation tracks
 
 ```mermaid
 flowchart LR
-    P0[Phase 0 — Nest shell] --> P1[Phase 1 — Auth OIDC]
-    P1 --> P2[Phase 2 — Loader stub 3C]
-    P2 --> P3[Phase 3 — Documents 3A]
+    subgraph core [Core track]
+        C0[C0 Shell done] --> C1[C1 Auth done]
+        C1 --> C2[C2 Loader done]
+        C2 --> C3[C3 Orchestrator]
+        C3 --> C6[C6 FileStore]
+        C6 --> C7[C7 Surface API]
+    end
+    subgraph studio [Studio track]
+        S0[S0 Shell] --> SD1[S-D1 Documents]
+        SD1 --> SI1[S-I1 Inventory]
+    end
+    C6 --> SD1
+    C7 --> S0
+    C3 --> SI1
 ```
 
-| Phase | Delivers | Validates | Repo |
-|-------|----------|-----------|------|
-| **0 — Shell** | Nest app, health, Postgres, layered `services/` folders, `core/packages/` | §15 map #42 layout | `core/` |
-| **1 — Auth** | OIDC + local fallback, session cookie, JWT issue, org context, admin default + custom role storage | P36 | `core/` |
-| **2 — Loader + stub (3C)** | DAL base classes + load hello-world from `studio/modules/`; manifest compile; migrator stub; **authenticated envelope smoke** on stub handler | Kickoff #1, P35 txn library, module `BaseRepository` | `core/` + `studio/modules/` |
-| **3 — Documents (3A)** | Documents module: upload, vault, project link, envelope save | FileStore, real module schema, Surface save | `studio/modules/documents/` + Core FileStore |
+| Track | Phase | Delivers | Repo |
+|-------|-------|----------|------|
+| **Core** | C0–C2 | Shell, auth, loader, orchestrator, hello-world smoke | `core/` + ref module |
+| **Core** | C3–C5 | Locks, migration validation, module enable/disable | `core/` |
+| **Core** | C6–C7 | FileStore, Surface API | `core/` |
+| **Studio** | S0 | Web shell, API client, login | `studio/apps/` |
+| **Studio** | S-D1 | Documents schema + vault save handler | `studio/modules/documents/` |
+| **Studio** | S-I1+ | Inventory, Planner, … | `studio/modules/*` |
 
-#### Phase 3 module candidates (reference)
+#### First module candidates (Studio — reference)
 
-| Option | Scope | Initial implementation? |
-|--------|-------|---------------------------|
-| **A — Documents** | First real module in `studio/modules/documents/` | **Yes — Phase 3** |
-| **B — Inventory Save Product** | Multi-step optional steps | **No — follow-on module slice** (`studio/modules/inventory/` + optional Business step) |
-| **C — Auth + stub envelope smoke** | Loader stub + orchestrator under real auth | **Yes — Phase 2** (paired with Phase 1 auth) |
+| Option | Scope | When |
+|--------|-------|------|
+| **A — Documents** | Vault + envelope save | **Studio S-D1** (after Core C6) |
+| **B — Inventory Save Product** | Multi-step optional steps | **Studio S-I2** (after Core C3) |
+| **C — Auth + stub envelope smoke** | Loader stub under real auth | **Done** (Core C2 + hello-world) |
 
 #### Dependency note
 
@@ -2323,8 +2447,8 @@ flowchart LR
 
 | Field | Value |
 |-------|-------|
-| **Decision** | Phases **0–3** all required; **3C** in Phase 2 (stub + envelope smoke); **3A Documents** in Phase 3; **3B Inventory deferred** (module, not Core) |
-| **Date** | 2025-06-12 |
+| **Decision** | Core **C0–C2** complete; Core **C3–C11** + Studio **per-module slices** ([§6](#core-remaining-work), [§7](#studio-module-implementation-phases)); Documents = **S-D1** not a Core phase |
+| **Date** | 2025-06-12 (updated 2026-06-12) |
 
 ---
 
@@ -2342,13 +2466,13 @@ These were clarified in kickoff discussion — recorded here so they are not re-
 
 ### Test plan — action required ([§20 #39](#20-open-questions))
 
-Kickoff decisions (P35 hybrid txn, P36 OIDC, module loader, schema-per-module, Public IDs, Phases 0–3) **require a formal test plan** — not ad-hoc manual checks alone.
+Kickoff decisions (P35 hybrid txn, P36 OIDC, module loader, schema-per-module, Public IDs) **require a formal test plan** — not ad-hoc manual checks alone.
 
 | Item | Detail |
 |------|--------|
 | **Deliverable** | `TEST_STRATEGY` via APM (`.apm/templates/TEST_STRATEGY.template.md`) |
-| **Timing** | Start with Phase 0 scaffold; add cases per phase |
-| **Scope** | Core Phases 0–3 + Documents module; Inventory module tests in follow-on slice |
+| **Timing** | Expand per Core/Studio phase |
+| **Scope** | Core C0–C11 + Studio module slices; Inventory tests in **S-I2** |
 | **Backlog** | [§18 Test plan](#test-plan-required--20-39) |
 
 ---
@@ -2388,3 +2512,5 @@ Kickoff decisions (P35 hybrid txn, P36 OIDC, module loader, schema-per-module, P
 | 2025-06-12 | **P37 module inheritance** — deferred; Public ID invariant; Core contract validation + mapping tool; modules implement; granular disable in v1 |
 | 2025-06-12 | **P39 test plan** — Jest platform-wide; Testcontainers + CI Postgres; GitHub Actions build/test from Phase 0 |
 | 2025-06-26 | **Phase 0 complete** — Nest shell in `core/services/`, `@erganis/platform`, health + Postgres readiness, Jest CI with Postgres service |
+| 2026-06-12 | **Module migrations policy** — Core-only migrator; first-party single `migrations/` folder; third-party mandatory `migrations/`; third-party forbidden from first-party/`platform` DDL; SQL validation in C4 |
+| 2026-06-12 | **Planning split** — Core phases C0–C2 done; remaining Core C3–C11; Studio per-module slices (S0, S-D1, S-I1, …) |

@@ -1,11 +1,11 @@
-# Push core/, studio/, agora/, companion/ to GitHub sub-repos.
+# Push core/, studio/, agora/, companion/, lyceum/ to GitHub sub-repos.
 # Run from erganis repo root. Requires: gh, git.
 
 $ErrorActionPreference = "Stop"
 $org = "enabledtocreate"
 $root = Split-Path -Parent $PSScriptRoot
 
-foreach ($d in @("core", "studio", "agora", "companion")) {
+foreach ($d in @("core", "studio", "agora", "companion", "lyceum")) {
     if (-not (Test-Path "$root\$d")) {
         Write-Host "Missing $root\$d - run from erganis repo root." -ForegroundColor Red
         exit 1
@@ -16,7 +16,8 @@ $repos = @(
     @{ name = "erganis-core"; desc = "Core: contracts, data, infrastructure, services, packages, scripts" },
     @{ name = "erganis-studio"; desc = "Studio and client apps, modules" },
     @{ name = "erganis-agora"; desc = "Public vendor catalog: web, api, shared" },
-    @{ name = "erganis-companion"; desc = "Companion mobile app" }
+    @{ name = "erganis-companion"; desc = "Companion mobile app" },
+    @{ name = "erganis-lyceum"; desc = "Mnemosyne — historical design styles reference (web, optional api)" }
 )
 
 foreach ($r in $repos) {
@@ -56,5 +57,6 @@ Push-Subrepo -dir "core" -repoName "erganis-core" -commitMsg "Initial Core"
 Push-Subrepo -dir "studio" -repoName "erganis-studio" -commitMsg "Initial Studio"
 Push-Subrepo -dir "agora" -repoName "erganis-agora" -commitMsg "Initial Erganis Agora"
 Push-Subrepo -dir "companion" -repoName "erganis-companion" -commitMsg "Initial Companion"
+Push-Subrepo -dir "lyceum" -repoName "erganis-lyceum" -commitMsg "Initial Erganis Lyceum (Mnemosyne)"
 
 Write-Host "Done. See docs/GITHUB-SETUP.md" -ForegroundColor Green

@@ -10,3 +10,6 @@
 [submodule "companion"]
 	path = companion
 	url = https://github.com/enabledtocreate/erganis-companion.git
+[submodule "lyceum"]
+	path = lyceum
+	url = https://github.com/enabledtocreate/erganis-lyceum.git

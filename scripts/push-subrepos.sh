@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
-# Create erganis sub-repos on GitHub (if missing), then push core/, studio/, agora/, companion/.
+# Create erganis sub-repos on GitHub (if missing), then push core/, studio/, agora/, companion/, lyceum/.
 # Run from erganis repo root. Requires: gh, git.
 
 set -e
 ORG="enabledtocreate"
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 
-for d in core studio agora companion; do
+for d in core studio agora companion lyceum; do
   if [ ! -d "$ROOT/$d" ]; then
     echo "Missing $ROOT/$d — run from erganis repo root."
     exit 1
@@ -18,9 +18,10 @@ declare -A DESCS=(
   [erganis-studio]="Studio and client apps, modules"
   [erganis-agora]="Public vendor catalog — web, api, shared"
   [erganis-companion]="Companion mobile app"
+  [erganis-lyceum]="Mnemosyne — historical design styles reference (web, optional api)"
 )
 
-for name in erganis-core erganis-studio erganis-agora erganis-companion; do
+for name in erganis-core erganis-studio erganis-agora erganis-companion erganis-lyceum; do
   full="$ORG/$name"
   if ! gh repo view "$full" &>/dev/null; then
     echo "Creating $full ..."
@@ -46,6 +47,7 @@ push_subrepo "core" "erganis-core" "Initial Core (contracts, data, services, pac
 push_subrepo "studio" "erganis-studio" "Initial Studio (apps/studio, apps/client, modules)"
 push_subrepo "agora" "erganis-agora" "Initial Erganis Agora (web, api, shared)"
 push_subrepo "companion" "erganis-companion" "Initial Companion mobile app"
+push_subrepo "lyceum" "erganis-lyceum" "Initial Erganis Lyceum (Mnemosyne)"
 
 echo ""
 echo "Done. See docs/GITHUB-SETUP.md for submodules."

@@ -7,7 +7,8 @@ $repos = @(
     @{ Name = "erganis-core"; Description = "Core: contracts, data, infrastructure, services, packages, scripts" },
     @{ Name = "erganis-studio"; Description = "Studio and client apps, modules" },
     @{ Name = "erganis-agora"; Description = "Public vendor catalog: web, api, shared" },
-    @{ Name = "erganis-companion"; Description = "Companion mobile app" }
+    @{ Name = "erganis-companion"; Description = "Companion mobile app" },
+    @{ Name = "erganis-lyceum"; Description = "Mnemosyne — historical design styles reference (web, optional api)" }
 )
 
 Write-Host "Creating sub-repos under GitHub account: $org" -ForegroundColor Cyan

@@ -8,6 +8,7 @@ The **parent repo** [erganis](https://github.com/enabledtocreate/erganis) is the
 | `erganis-studio` | `studio/` | Studio + client apps, modules |
 | `erganis-agora` | `agora/` | Public vendor site + API |
 | `erganis-companion` | `companion/` | Mobile app |
+| `erganis-lyceum` | `lyceum/` | Mnemosyne — historical styles reference (web, optional api) |
 
 Legacy names (`erganis-platform`, `erganis-app-studio-portal`, `erganis-app-id-companion`) should be renamed or replaced on GitHub when migrating.
 
@@ -27,7 +28,7 @@ Or `./scripts/create-repos.sh`
 .\scripts\push-subrepos.ps1
 ```
 
-Run from erganis root. Creates repos if missing and pushes `core/`, `studio/`, `agora/`, `companion/`.
+Run from erganis root. Creates repos if missing and pushes `core/`, `studio/`, `agora/`, `companion/`, `lyceum/`.
 
 ## Add as submodules
 
@@ -37,7 +38,8 @@ git submodule add https://github.com/enabledtocreate/erganis-core.git core
 git submodule add https://github.com/enabledtocreate/erganis-studio.git studio
 git submodule add https://github.com/enabledtocreate/erganis-agora.git agora
 git submodule add https://github.com/enabledtocreate/erganis-companion.git companion
-git commit -m "Add submodules: core, studio, agora, companion"
+git submodule add https://github.com/enabledtocreate/erganis-lyceum.git lyceum
+git commit -m "Add submodules: core, studio, agora, companion, lyceum"
 ```
 
 See [SUBMODULES.md](SUBMODULES.md) for day-to-day submodule workflow.

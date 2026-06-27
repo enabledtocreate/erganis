@@ -14,6 +14,7 @@ Until APM generates managed docs per repo, each **submodule** has a local stagin
 | Studio | `studio/docs/temp/` |
 | Agora | `agora/docs/temp/` |
 | Companion | `companion/docs/temp/` |
+| Lyceum (Mnemosyne) | `lyceum/docs/temp/` |
 
 Use these for drafts, ADRs, and implementation notes. Promote content via APM when templates are in use — do not treat `temp/` as long-term source of truth.
 
@@ -33,4 +34,4 @@ Use these for drafts, ADRs, and implementation notes. Promote content via APM wh
 ## Related
 
 - Parent: [erganis](https://github.com/enabledtocreate/erganis)
-- Sub-repos: `erganis-core`, `erganis-studio`, `erganis-agora`, `erganis-companion`
+- Sub-repos: `erganis-core`, `erganis-studio`, `erganis-agora`, `erganis-companion`, `erganis-lyceum`

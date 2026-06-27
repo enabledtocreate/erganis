@@ -1729,7 +1729,7 @@ Full catalog: [§11 Business](#business). Phased backlog — **budgeting deep di
 - [ ] Profile enrichment via Core **Scraper Services** (website link + XPath)
 
 ### Mnemosyne (`lyceum/`)
-- [ ] Submodule stub (`lyceum/web`, optional `api/`, `shared/`)
+- [x] Submodule stub (`lyceum/web`, optional `api/`, `shared/`)
 - [ ] Lean style reference content model (era, motifs, palettes, pairings)
 - [ ] Public browse/search site — **Mnemosyne** branding (Next.js + shadcn)
 - [ ] Integration with Core **Scraper Services** for external reference metadata

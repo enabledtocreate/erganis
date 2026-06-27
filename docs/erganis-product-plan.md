@@ -269,10 +269,10 @@ flowchart TD
 
 | Folder | Purpose |
 |--------|---------|
-| `contracts/` | OpenAPI schemas; SDK generation in `contracts/sdk/` |
+| `contracts/` | OpenAPI schemas; generated SDKs in `contracts/sdk/` |
 | `services/` | NestJS runtime (orchestrator, APIs, module loader) |
 | `data/` | PostgreSQL DAL, migrations |
-| `packages/` | Shared TypeScript libraries |
+| `packages/` | Hand-maintained libraries — `packages/typescript/` (v1); `packages/dotnet/` reserved for NuGet |
 | `infrastructure/` | Deploy; Docker optional for local Postgres |
 | `scripts/` | Setup, migrate, update CLI |
 | `tools/` | Developer tooling — contract readers, module connection generators, SDK/codegen helpers |
@@ -357,9 +357,16 @@ flowchart TD
 - **Source of truth:** `core/contracts/schemas/core/openapi.yaml`
 - **Public API:** Generated subset (`x-audience: public`) in `schemas/public/v1/`, etc.
 - **Module manifests:** `schemas/module/` — YAML → JSON compile
-- **SDK outputs (planned):** TypeScript, C#, Java — **review needed** (codegen tool, publish, semver coupling)
+- **Generated SDKs:** `core/contracts/sdk/` — **TypeScript first** (Phase 0–1); `sdk/dotnet/` and `sdk/java/` **reserved** (no work until needed)
+- **Hand-maintained libraries:** `core/packages/typescript/` (platform helpers); `core/packages/dotnet/` **reserved** for future NuGet (`Erganis.Platform`, etc.)
 
-**Rule:** Hand-written SDKs do not live in app repos.
+**Rules:**
+
+- Hand-written HTTP clients do not live in app repos — generate from OpenAPI.
+- Core **runtime** stays Nest/TypeScript; .NET integrates via generated clients and optional sidecar modules, not inside Nest.
+- Module loader remains registry-agnostic (npm, NuGet, …) for **installed** modules; v1 path config is sufficient.
+
+**Open (later):** Multi-language publish cadence and semver coupling ([§20](#20-open-questions) #5).
 
 ### Cross-cutting Core tooling
 
@@ -1062,7 +1069,8 @@ Core libraries **discover, validate, and plug in** modules for Erganis-hosted ap
 | **Inheritance** | **Not planned for v1/v2** unless a concrete customer need appears later |
 | **Public IDs** | **Invariant** — stable across integrations; modules and Surfaces link by Public ID + contract; no silent breakage on disable or third-party hooks |
 | **Contract validation** | **Core owns** validation at boundaries (envelope, API, Surface load); **modules own** domain implementation that satisfies contracts |
-| **Contracts** | Defined in `core/contracts/`; implementations are module-specific; Studio/tools expose **linkable** contract surfaces when authoring modules |
+| **Platform contracts** | Authored in **`core/contracts/`** — envelope, Public IDs, manifest schema, Core OpenAPI baseline, Surface/orchestrator rules |
+| **Module contracts** | **Authored in module/product repos** (OpenAPI fragments, step I/O, UI contributions); Core **registers, merges, and validates** at runtime via manifest + API composer |
 | **Mapping config** | **Core-owned tool** (`core/tools/` + runtime reader) — optional declarative field/step mapping between contracts; configurable; consumed by **Studio** and any UI that edits orchestrator configuration |
 | **v1 admin UX** | **Granular disable** of specific `contributions.*` + **dependency graph** warning on module disable (already decided) |
 | **Third-party integration** | API + optional orchestrator steps — not replacing first-party module identity |
@@ -1351,6 +1359,17 @@ sequenceDiagram
 
 **Integrations:** Inbound (external → Erganis) and outbound (Erganis → external) via Surface/Public API and webhooks.
 
+### Contract ownership (platform vs module)
+
+| | Platform (Core) | Module / product |
+|---|-----------------|------------------|
+| **Authors** | Core team | Module teams (Documents, Inventory, Build, …) |
+| **Core's role** | Registry, validation at boundaries, API composer, orchestrator policy, SDK generation | Load manifest, merge OpenAPI, enforce RBAC |
+| **Examples** | Operation envelope, Public ID format, manifest JSON Schema, Core OpenAPI baseline | `contributions.api` OpenAPI fragment, orchestrator step handlers, domain entity schemas |
+| **Physical location** | `core/contracts/schemas/` (platform) | Module repo — e.g. `studio/modules/inventory/openapi/inventory.yaml` |
+
+Core **manages** the contract system; products **develop** domain contracts that plug into it. Studio/tools expose **linkable** contract surfaces when authoring modules.
+
 ### Module-extended API
 
 Core exposes a **composed, org-scoped API** — not a single fixed OpenAPI document for every deployment.
@@ -1483,12 +1502,12 @@ Use this table to decide **which repo owns what**. Rows follow **stack order** (
 | 37 | **Cross-cutting** — External tool bridges | Module repos + Experience | Export/import/connect patterns (Excel, CSV, Pinterest, Instagram, etc.) declared per module; adoption path for legacy workflows ([§7](#7-studio)). | Per-module export/import manifest shape (TBD). |
 | 38 | **Cross-cutting** — Deploy & tooling | `core/` (`infrastructure/`, `scripts/`) | **Windows and Linux native**; Docker optional for local Postgres only. **Updater / installer / migrator** for self-hosted deployments; module migrations on enable. | — |
 | 39 | **Core library** — `contracts/` | `core/` | Schemas, OpenAPI, module manifest tooling, **SDK generation** output (`contracts/sdk/`). Single contract source for all repos. | SDK strategy ([§20](#20-open-questions) #5, #21). |
-| 40 | **Core library** — `packages/` | `core/` | Shared **TypeScript** libraries: domain types, DAL interfaces, envelope helpers, platform errors — **no Nest runtime** in pure packages. Building blocks for `services/` and module authors. | Package breakdown (names, boundaries) — convention TBD at scaffold time. |
+| 40 | **Core library** — `packages/` | `core/` | Hand-maintained libs: **`packages/typescript/`** (envelope helpers, DAL interfaces, platform errors — no Nest runtime); **`packages/dotnet/`** reserved for future NuGet. Building blocks for `services/` and integrators. | Package names/boundaries at Phase 0 scaffold |
 | 41 | **Core library** — `data/` | `core/` | SQL migrations, DAL implementations, PostgreSQL-specific persistence code. | Table ownership convention for module tables ([§21](#21-core-readiness--design-backlog) B). |
 | 42 | **Core library** — `services/` | `core/` | **NestJS** application — layered server template: API controllers, orchestration, platform domain, infrastructure adapters. Hosts Core Nest modules ([§6](#6-core)). | Layered folder naming inside Nest app — align at scaffold ([§21](#21-core-readiness--design-backlog)). |
 | 43 | **Core library** — `infrastructure/` | `core/` | Deploy configs, Docker Compose (optional), env examples — runtime hosting, not business logic. | — |
 | 44 | **Core library** — `scripts/` | `core/` | Setup, migrate, update, dev CLI — updater/installer/migrator entry points. | — |
-| 45 | **Core library** — Generated SDKs | `core/` (`contracts/sdk/`) | TypeScript (first); C#/Java planned. Consumed by Studio, Companion, external apps — **not** hand-maintained in app repos. | Composed vs baseline+module packages ([§20](#20-open-questions) #21). |
+| 45 | **Core library** — Generated SDKs | `core/` (`contracts/sdk/`) | **TypeScript first** in `sdk/typescript/`; **`sdk/dotnet/`** and **`sdk/java/`** reserved. Consumed by Studio, Companion, external apps — not hand-maintained in app repos. | Publish/semver when .NET/Java codegen starts ([§20](#20-open-questions) #5) |
 | 46 | **Shared library** — Studio | `studio/` (`shared/`) | Web UI kit + API clients + desktop sync — **not** Core; Experience building blocks only. | — |
 | 47 | **Shared library** — Agora | `agora/` (`shared/`) | Types and clients aligned with Agora API contracts. | — |
 | 48 | **Shared library** — Lyceum | `lyceum/` (`shared/`) | Types aligned with Core / optional Lyceum API contracts. | — |

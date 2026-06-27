@@ -2,7 +2,7 @@
 
 > **Status:** Pre-PRD planning document. Single source of truth until APM-managed documents (PRD, ARCHITECTURE, etc.) are generated from `.apm/templates/`.
 >
-> **Core kickoff:** **Complete** (Jun 2025). **Phase 0 complete** (Jun 2025) — begin **Phase 1** (auth). See [§21 Core readiness](#21-core-readiness--design-backlog).
+> **Core kickoff:** **Complete** (Jun 2025). **Phase 1 complete** (Jun 2025) — begin **Phase 2** (module loader). See [§21 Core readiness](#21-core-readiness--design-backlog).
 >
 > **Do not** edit template output files (`ARCHITECTURE.md`, `PRD.md`, etc.) directly — use APM and fragment workflows. This plan will be broken into fragments when templates are ready.
 
@@ -1596,8 +1596,8 @@ User → Surface → Operation envelope → Orchestrator (lock) → Module steps
 Phases **0–3** — see [§6 Initial Core implementation scope](#initial-core-implementation-scope-decided--22-p38-first-core-vertical-slice):
 
 - [x] **Phase 0** — Nest shell, Postgres, layered `core/services/` + `core/packages/typescript/`
-- [ ] **Phase 1** — OIDC + local fallback, session, JWT, org, custom roles
-- [ ] **Phase 2 (3C)** — Module loader + hello-world stub + authenticated envelope smoke test
+- [x] **Phase 1** — OIDC + local fallback, session, JWT, org, custom roles — [`core/docs/temp/PHASE-1.md`](../core/docs/temp/PHASE-1.md)
+- [ ] **Phase 2 (3C)** — DAL base classes (`BaseRepository`, `DbUnitOfWork`) + module loader + hello-world stub + authenticated envelope smoke test
 - [ ] **Phase 3 (3A)** — **Documents** module (`studio/modules/documents/`) — upload, vault, envelope save
 - [ ] **Follow-on module slice** — Inventory Save Product (`studio/modules/inventory/`) — multi-step optional `post_commit` (not Core)
 
@@ -1607,7 +1607,7 @@ Phases **0–3** — see [§6 Initial Core implementation scope](#initial-core-i
 - [x] **DB** — Testcontainers (local) + Postgres service container (GitHub Actions CI)
 - [x] **CI** — build + test steps in `.github/workflows/ci.yml` from Phase 0
 - [x] Generate **TEST_STRATEGY** (APM template) when Phase 0 scaffold exists — draft in [`core/docs/temp/TEST_STRATEGY.md`](../core/docs/temp/TEST_STRATEGY.md)
-- [ ] Auth tests — OIDC mock, domain JIT, local fallback, session, JWT
+- [x] Auth tests — OIDC mock, domain JIT, local fallback, session, JWT
 - [ ] Orchestrator tests — txn rollback, `outcome: partial` vs `failed`, 409 lock conflict
 - [ ] Module loader tests — enable/disable, manifest compile, migrations stub
 - [ ] Documents module integration tests — envelope save, FileStore paths
@@ -1895,11 +1895,12 @@ Use `Ex: TODO` in specs where behavior is not yet finalized.
 
 ### Core readiness — start here
 
-**Verdict:** **Phase 0 complete.** Begin **Phase 1** — OIDC + local fallback auth, session/JWT, org + roles in `core/services/`.
+**Verdict:** **Phase 1 complete.** Begin **Phase 2** — module loader + hello-world stub + authenticated envelope smoke test in `core/services/`.
 
 | Area | Status | Reference |
 |------|--------|-----------|
 | Phase 0 shell | **Done** | [`core/docs/temp/PHASE-0.md`](../core/docs/temp/PHASE-0.md) |
+| Phase 1 auth | **Done** | [`core/docs/temp/PHASE-1.md`](../core/docs/temp/PHASE-1.md) |
 | Envelope rollback & HTTP | **Decided** (P35) | [§13](#13-operation-envelope--orchestration), [§22 P35](#p35-envelope-partial-success-vs-full-failure) |
 | SSO / auth | **Decided** (P36) | [§6 Authentication](#authentication-decided--22-p36-sso-org-login-vs-communications-oauth), [§22 P36](#p36-sso-org-login-vs-communications-oauth) |
 | Module integration model | **Decided** (P37) | [§12](#module-inheritance-decided--22-p37-module-inheritance), [§22 P37](#p37-module-inheritance) |
@@ -2285,7 +2286,7 @@ Full specification: [§6 Test plan](#test-plan-decided--22-p39--core-test-plan).
 | **Scope** | **All Phases 0–3** required before broader module work |
 | **Phase 0** | Nest shell, Postgres, layered `core/services/` + `core/packages/` |
 | **Phase 1** | Auth: OIDC v1 + minimal local fallback, session, JWT, org, custom roles ([§6 Authentication](#authentication-decided--22-p36-sso-org-login-vs-communications-oauth)) |
-| **Phase 2 (3C)** | Module loader + **hello-world stub** in `studio/modules/` + **authenticated envelope smoke test** (orchestrator + stub `phase: db` step, `DbUnitOfWork`) |
+| **Phase 2 (3C)** | **DAL:** `BaseRepository` + `DbUnitOfWork` in `@erganis/platform`; `@erganis/dal-postgres` adapters. Module loader + **hello-world stub** in `studio/modules/` + **authenticated envelope smoke test** (orchestrator + stub `phase: db` step) |
 | **Phase 3 (3A)** | **Documents** first-party module — `studio/modules/documents/` — upload/vault/envelope save; Core **FileStore** |
 | **Not now (3B)** | **Inventory Save Product** — **Inventory is a Studio module**, not Core; follow-on slice after Documents for multi-step optional `post_commit` |
 | **Test plan** | Formal **TEST_STRATEGY** required — [§6 Test plan](#test-plan-action-required) |
@@ -2305,7 +2306,7 @@ flowchart LR
 |-------|----------|-----------|------|
 | **0 — Shell** | Nest app, health, Postgres, layered `services/` folders, `core/packages/` | §15 map #42 layout | `core/` |
 | **1 — Auth** | OIDC + local fallback, session cookie, JWT issue, org context, admin default + custom role storage | P36 | `core/` |
-| **2 — Loader + stub (3C)** | Load hello-world from `studio/modules/`; manifest compile; migrator stub; **authenticated envelope smoke** on stub handler | Kickoff #1, P35 txn library | `core/` + `studio/modules/` |
+| **2 — Loader + stub (3C)** | DAL base classes + load hello-world from `studio/modules/`; manifest compile; migrator stub; **authenticated envelope smoke** on stub handler | Kickoff #1, P35 txn library, module `BaseRepository` | `core/` + `studio/modules/` |
 | **3 — Documents (3A)** | Documents module: upload, vault, project link, envelope save | FileStore, real module schema, Surface save | `studio/modules/documents/` + Core FileStore |
 
 #### Phase 3 module candidates (reference)

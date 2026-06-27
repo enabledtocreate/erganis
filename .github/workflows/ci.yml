@@ -26,6 +26,9 @@ jobs:
           --health-retries 5
     env:
       DATABASE_URL: postgresql://erganis:dev_password@localhost:5432/erganis
+      JWT_SECRET: ci-test-jwt-secret
+      AUTH_OIDC_MOCK: "true"
+      AUTH_LOCAL_ENABLED: "true"
     steps:
       - uses: actions/checkout@v4
         with:
@@ -49,9 +52,18 @@ jobs:
           npm run build
           npm test
 
+      - name: Build and test Core DAL (PostgreSQL)
+        run: |
+          cd core/packages/typescript && npm ci && npm run build
+          cd ../../data/dal
+          npm ci
+          npm run build
+          npm test
+
       - name: Build and test Core services
         run: |
           cd core/packages/typescript && npm ci && npm run build
+          cd ../../data/dal && npm ci && npm run build
           cd ../../services
           npm ci
           npm run build

@@ -393,7 +393,7 @@ See also: [§21 Core readiness](#core-readiness--start-here) · [Stack tier map]
 
 Finish **Core platform** before stacking Studio module UI. Ordered by dependency — later Studio modules assume these exist.
 
-**Full delivery reference:** [`CORE-IMPLEMENTATION-PLAN.md`](../core/docs/temp/CORE-IMPLEMENTATION-PLAN.md) (C0–C13 **complete**).
+**Full delivery reference:** [`CORE-IMPLEMENTATION-PLAN.md`](../core/docs/temp/CORE-IMPLEMENTATION-PLAN.md) (C0–C12 **complete**).
 
 | Core phase | Repo | Delivers | Blocks |
 |------------|------|----------|--------|
@@ -407,9 +407,8 @@ Finish **Core platform** before stacking Studio module UI. Ordered by dependency
 | **C10 — UI toolbox** | `core/` | Layout/slot registry; **design tokens + component skins (C12)**; theme preview; module UI contribution wiring | Studio composed shell |
 | **C11 — Sync API** | `core/` | Desktop offline replica protocol; conflict detection (`expectedVersion`); push/pull endpoints | Studio desktop |
 | **C12 — UI skin & theme** | `core/` | Design tokens (colors, fonts, spacing) + editable component skins per slot; theme preview API | Studio shell white-label, Client portal |
-| **C13 — Codes provider** | `core/` | Versioned IBC / accessibility rule packs; external sync; read API for modules | **Build** Codes & space analysis |
 
-**Not Core:** Documents, Inventory, Design, Planner, etc. — see [§7 Studio module phases](#studio-module-implementation-phases).
+**Not Core:** Documents, Inventory, Design, Planner, **Codes (IBC / accessibility)**, etc. — see [§7 Studio module phases](#studio-module-implementation-phases). Building-code logic is **Build module** domain logic (S-B2/S-B3), not a Core service.
 
 ### Test plan (decided — [§22 P39](#p39--core-test-plan))
 
@@ -419,7 +418,7 @@ Finish **Core platform** before stacking Studio module UI. Ordered by dependency
 
 | Area | Runner / libraries | Notes |
 |------|-------------------|--------|
-| **Core** (`core/`) | **Jest** + Nest testing utilities | Nest default; Core C0–C13 |
+| **Core** (`core/`) | **Jest** + Nest testing utilities | Nest default; Core C0–C12 |
 | **Nest backends** (Core, `studio/modules/*`, `agora/api`, module servers) | **Jest** | Same runner everywhere server-side TypeScript runs |
 | **Web frontend** (Studio, Client, Agora web, Lyceum web) | **Jest** + **Testing Library** | One platform runner; Next.js-compatible |
 | **Companion** (React Native) | **Jest** + Testing Library RN | Same runner family — avoid Vitest/Jest split unless a future constraint forces it |
@@ -494,7 +493,7 @@ Each first-party module ships in **slices** — schema + handlers first (Nest mo
 | **S-Des1** | **Design** | `studio/modules/design/` | 1 | Spaces, palettes, mood boards ([Design v1](#design)) | C2, C7 |
 | **S-Pr1** | **Presentations** | `studio/modules/presentations/` | 1 | Proposal builder; Inventory/Design composition blocks | Inventory S-I1, Design S-Des1 |
 | **S-B1** | **Build** | `studio/modules/build/` | 1 | Drawing vault refs; Tags on sets; approval envelope | Documents S-D1, C3 locks |
-| **S-B2** | **Build** | same | 2 | **Codes** component — IBC + accessibility via Core C13 adapter; jurisdiction/edition aware | **C13**, S-B1 |
+| **S-B2** | **Build** | same | 2 | **Codes** module logic — IBC + accessibility rule packs owned by Build; jurisdiction/edition aware; external sync via module job | S-B1, C2, C9 |
 | **S-B3** | **Build** | same | 3 | **Space analysis chart** — furniture footprint, circulation, occupancy, rules of thumb, code cross-check | S-B2, S-I1 optional |
 | **S-Bus1** | **Business** | `studio/modules/business/` | 1 | Budgeting skeleton; cost verification hooks | Reports S-R1 later |
 | **S-R1** | **Reports** | `studio/modules/reports/` | 1 | Registered data emissions; cross-module dashboards | Multiple modules emitting |
@@ -937,8 +936,8 @@ Design is the **creativity area**; Presentations **assembles and delivers** outp
 ### Build
 
 - Drawings, MEP, **light schedules** (plumbing schedules, etc.).
-- **Codes (layered)** — IBC and **accessibility** rule packs owned by Core **C13** (synced from external code service); Build surfaces designer-friendly occupancy, egress, and clearance guidance. See [Studio plan S-B2](../studio/docs/STUDIO-IMPLEMENTATION-PLAN.md#s-b2--build--codes-ibc--accessibility).
-- **Space analysis / occupancy planner** — chart system for room program: furniture inventory, circulation, user group / occupant load, rules of thumb (advisory), and code cross-check against C13. Helps interior and architectural designers size spaces from occupancy, not just sq ft. See [S-B3](../studio/docs/STUDIO-IMPLEMENTATION-PLAN.md#s-b3--build--space-analysis--occupancy-planner).
+- **Codes (Build module logic)** — IBC and **accessibility** rule packs owned by the **Build module** (its own schema; synced from an external code service via a module job). Building-code logic is domain logic, **not** a Core service. Build surfaces designer-friendly occupancy, egress, and clearance guidance. See [Studio plan S-B2](../studio/docs/STUDIO-IMPLEMENTATION-PLAN.md#s-b2--build--codes-ibc--accessibility).
+- **Space analysis / occupancy planner** — chart system for room program: furniture inventory, circulation, user group / occupant load, rules of thumb (advisory), and code cross-check against the Build Codes layer (S-B2). Helps interior and architectural designers size spaces from occupancy, not just sq ft. See [S-B3](../studio/docs/STUDIO-IMPLEMENTATION-PLAN.md#s-b3--build--space-analysis--occupancy-planner).
 - **Tags on drawing sets** — label and identify items on plans/elevations/schedules. Drawing sets often specify products **not** in **Inventory**; tags should work standalone *or* **pull from Inventory** and link tagged items to `productPublicId` when a match exists. Goal: clearer drawing sets and smoother **install days** (field teams see what/where without reconciling paper vs spreadsheet).
 - **Drawing approval** workflow owned here — uses **Core users & roles** for approvers; orchestrator + operation envelope for sign-off steps.
 - Heavy drawing *viewers* remain Experience-layer (Studio); files in Core FileStore.
@@ -1683,7 +1682,7 @@ User → Surface → Operation envelope → Orchestrator (lock) → Module steps
 
 > **Prioritization:** Items below are captured ideas — **not** delivery order. Rank each iteration by **biggest user needs** before scheduling ([§1](#feature-prioritization-how-to-read-this-plan)).
 
-### Core — platform (C0–C13 complete)
+### Core — platform (C0–C12 complete)
 
 See [§6 Core remaining](#core-remaining-work):
 
@@ -1701,7 +1700,6 @@ See [§6 Core remaining](#core-remaining-work):
 - [x] **C10** — UI toolbox / composition slot registry — [CORE plan](../core/docs/temp/CORE-IMPLEMENTATION-PLAN.md#c10--ui-toolbox--composition)
 - [x] **C11** — Sync API stub (pull/push, optimistic concurrency) — [CORE plan](../core/docs/temp/CORE-IMPLEMENTATION-PLAN.md#c11--sync-api-stub)
 - [x] **C12** — UI skin & theme preview (design tokens + component skins) — [CORE plan](../core/docs/temp/CORE-IMPLEMENTATION-PLAN.md#c12--ui-skin--theme-preview)
-- [x] **C13** — Codes provider adapter (IBC / accessibility rule packs, external sync) — [CORE plan](../core/docs/temp/CORE-IMPLEMENTATION-PLAN.md#c13--codes-provider-adapter)
 
 ### Studio — modules (per-module slices)
 
@@ -1716,7 +1714,7 @@ See [§7 Studio module phases](#studio-module-implementation-phases) and [`STUDI
 - [ ] **S-Des1** — Design v1 (spaces, palettes, mood boards)
 - [ ] **S-Pr1** — Presentations (proposal builder)
 - [ ] **S-B1** — Build (drawings, tags, approvals)
-- [ ] **S-B2** — Build Codes (IBC + accessibility, Core C13)
+- [ ] **S-B2** — Build Codes (IBC + accessibility — Build module domain logic)
 - [ ] **S-B3** — Build space analysis / occupancy planner
 - [ ] **S-Bus1** — Business (budgeting skeleton)
 - [ ] **S-R1** — Reports (data emissions)
@@ -2024,7 +2022,7 @@ Use `Ex: TODO` in specs where behavior is not yet finalized.
 | Core C0 shell | **Done** | [CORE plan](../core/docs/temp/CORE-IMPLEMENTATION-PLAN.md#c0--shell) |
 | Core C1 auth | **Done** | [CORE plan](../core/docs/temp/CORE-IMPLEMENTATION-PLAN.md#c1--platform-auth) |
 | Core C2 loader + orchestrator | **Done** | [CORE plan](../core/docs/temp/CORE-IMPLEMENTATION-PLAN.md#c2--module-loader--dal--envelope-smoke) |
-| Core platform (C0–C13) | **Done** | [§6 Core](#6-core) |
+| Core platform (C0–C12) | **Done** | [§6 Core](#6-core) |
 | Studio module slices | **Next** | [§7 Studio](#7-studio) |
 | Studio module slices | **After Core C6–C7** | [§7 Studio module phases](#studio-module-implementation-phases) |
 | Envelope rollback & HTTP | **Decided** (P35) | [§13](#13-operation-envelope--orchestration), [§22 P35](#p35-envelope-partial-success-vs-full-failure) |
@@ -2487,7 +2485,7 @@ Kickoff decisions (P35 hybrid txn, P36 OIDC, module loader, schema-per-module, P
 |------|--------|
 | **Deliverable** | `TEST_STRATEGY` via APM (`.apm/templates/TEST_STRATEGY.template.md`) |
 | **Timing** | Expand per Core/Studio phase |
-| **Scope** | Core C0–C13 + Studio module slices; Inventory tests in **S-I2** |
+| **Scope** | Core C0–C12 + Studio module slices; Inventory tests in **S-I2** |
 | **Backlog** | [§18 Test plan](#test-plan-required--20-39) |
 
 ---

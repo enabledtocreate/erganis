@@ -375,7 +375,7 @@ flowchart TD
 - **Users & roles** — identity, org membership, and **roles** live in **Core** (e.g. drawing approvers, RBAC). Modules reference Core users by Public ID; they do not own the user directory.
 - **Trigger classes** — Core-defined workflow starters (e.g. on save, on approve, on schedule). Modules register handlers that trigger classes invoke; config-first pipeline definitions build on these classes.
 - **Event handlers** — react to domain and platform events (outbox delivery, module lifecycle, cross-module notifications). Distinct from orchestrator **steps** (synchronous envelope) but may enqueue operations or jobs.
-- **Primary UI toolbox** — Core-owned composition system to assemble Erganis UI: layout regions, navigation shell, slot registry, theme tokens, dashboard/widget mounting. Modules contribute React components into slots; **Next.js + shadcn** in Studio render the assembled shell. Joined cross-module dashboards lean on **Reports** ([§11](#11-module-catalog)).
+- **Primary UI toolbox** — Core-owned composition system to assemble Erganis UI: layout regions, navigation shell, slot registry, **design tokens + component skins (C12)**, theme preview, dashboard/widget mounting. Modules contribute React components into slots; **Next.js + shadcn** in Studio render the assembled shell. Joined cross-module dashboards lean on **Reports** ([§11](#11-module-catalog)).
 
 See also: [§21 Core readiness](#core-readiness--start-here) · [Stack tier map](#stack-tier--repository-map) · [Core remaining](#core-remaining-work) · [Studio module phases](#studio-module-implementation-phases)
 
@@ -385,13 +385,15 @@ See also: [§21 Core readiness](#core-readiness--start-here) · [Stack tier map]
 
 | Core phase | Status | Delivers | Doc |
 |------------|--------|----------|-----|
-| **C0 — Shell** | **Done** | Nest app, health, Postgres, layered `services/` + `packages/` | [`PHASE-0.md`](../core/docs/temp/PHASE-0.md) |
-| **C1 — Auth** | **Done** | OIDC + local fallback, session, JWT, org/users/roles, domain JIT | [`PHASE-1.md`](../core/docs/temp/PHASE-1.md) |
-| **C2 — Loader + orchestrator** | **Done** | DAL, module loader, Core migrator, orchestrator, hello-world envelope smoke | [`PHASE-2.md`](../core/docs/temp/PHASE-2.md) |
+| **C0 — Shell** | **Done** | Nest app, health, Postgres, layered `services/` + `packages/` | [C0](../core/docs/temp/CORE-IMPLEMENTATION-PLAN.md#c0--shell) |
+| **C1 — Auth** | **Done** | OIDC + local fallback, session, JWT, org/users/roles, domain JIT | [C1](../core/docs/temp/CORE-IMPLEMENTATION-PLAN.md#c1--platform-auth) |
+| **C2 — Loader + orchestrator** | **Done** | DAL, module loader, Core migrator, orchestrator, hello-world envelope smoke | [C2](../core/docs/temp/CORE-IMPLEMENTATION-PLAN.md#c2--module-loader--dal--envelope-smoke) |
 
 ### Core remaining work
 
 Finish **Core platform** before stacking Studio module UI. Ordered by dependency — later Studio modules assume these exist.
+
+**Full delivery reference:** [`CORE-IMPLEMENTATION-PLAN.md`](../core/docs/temp/CORE-IMPLEMENTATION-PLAN.md) (C0–C13 **complete**).
 
 | Core phase | Repo | Delivers | Blocks |
 |------------|------|----------|--------|
@@ -402,8 +404,10 @@ Finish **Core platform** before stacking Studio module UI. Ordered by dependency
 | **C7 — Surface API** | `core/` | Surface GET — parallel module loaders; namespaced `modules.{key}` response; composed load contract | Studio web shell |
 | **C8 — Public API** | `core/` | JWT guard on public routes; API keys (shape TBD); OpenAPI baseline expansion | Companion, integrations |
 | **C9 — Platform services** | `core/` | pg-boss jobs; event outbox; search FTS adapter; operation audit log | Communications, Reports, scrapers |
-| **C10 — UI toolbox** | `core/` | Layout/slot registry; theme tokens; module UI contribution wiring | Studio composed shell |
+| **C10 — UI toolbox** | `core/` | Layout/slot registry; **design tokens + component skins (C12)**; theme preview; module UI contribution wiring | Studio composed shell |
 | **C11 — Sync API** | `core/` | Desktop offline replica protocol; conflict detection (`expectedVersion`); push/pull endpoints | Studio desktop |
+| **C12 — UI skin & theme** | `core/` | Design tokens (colors, fonts, spacing) + editable component skins per slot; theme preview API | Studio shell white-label, Client portal |
+| **C13 — Codes provider** | `core/` | Versioned IBC / accessibility rule packs; external sync; read API for modules | **Build** Codes & space analysis |
 
 **Not Core:** Documents, Inventory, Design, Planner, etc. — see [§7 Studio module phases](#studio-module-implementation-phases).
 
@@ -415,7 +419,7 @@ Finish **Core platform** before stacking Studio module UI. Ordered by dependency
 
 | Area | Runner / libraries | Notes |
 |------|-------------------|--------|
-| **Core** (`core/`) | **Jest** + Nest testing utilities | Nest default; Core C0–C11 |
+| **Core** (`core/`) | **Jest** + Nest testing utilities | Nest default; Core C0–C13 |
 | **Nest backends** (Core, `studio/modules/*`, `agora/api`, module servers) | **Jest** | Same runner everywhere server-side TypeScript runs |
 | **Web frontend** (Studio, Client, Agora web, Lyceum web) | **Jest** + **Testing Library** | One platform runner; Next.js-compatible |
 | **Companion** (React Native) | **Jest** + Testing Library RN | Same runner family — avoid Vitest/Jest split unless a future constraint forces it |
@@ -472,6 +476,8 @@ OIDC + domain JIT + local fallback; session/JWT; orchestrator txn rollback vs `p
 
 Each first-party module ships in **slices** — schema + handlers first (Nest module loaded by Core), then Surface UI contributions in `studio/apps/studio`. Rank slices by user need ([§1](#feature-prioritization-how-to-read-this-plan)).
 
+**Full plan:** [`studio/docs/STUDIO-IMPLEMENTATION-PLAN.md`](../studio/docs/STUDIO-IMPLEMENTATION-PLAN.md) · **All plans:** [`docs/IMPLEMENTATION-PLANS.md`](./IMPLEMENTATION-PLANS.md)
+
 | Studio phase | Module | Repo path | Slice | Delivers | Core deps |
 |--------------|--------|-----------|-------|----------|-----------|
 | **Ref** | Hello-world | `studio/modules/hello-world/` | — | Stub handler + envelope smoke (**done**) | C2 |
@@ -488,6 +494,8 @@ Each first-party module ships in **slices** — schema + handlers first (Nest mo
 | **S-Des1** | **Design** | `studio/modules/design/` | 1 | Spaces, palettes, mood boards ([Design v1](#design)) | C2, C7 |
 | **S-Pr1** | **Presentations** | `studio/modules/presentations/` | 1 | Proposal builder; Inventory/Design composition blocks | Inventory S-I1, Design S-Des1 |
 | **S-B1** | **Build** | `studio/modules/build/` | 1 | Drawing vault refs; Tags on sets; approval envelope | Documents S-D1, C3 locks |
+| **S-B2** | **Build** | same | 2 | **Codes** component — IBC + accessibility via Core C13 adapter; jurisdiction/edition aware | **C13**, S-B1 |
+| **S-B3** | **Build** | same | 3 | **Space analysis chart** — furniture footprint, circulation, occupancy, rules of thumb, code cross-check | S-B2, S-I1 optional |
 | **S-Bus1** | **Business** | `studio/modules/business/` | 1 | Budgeting skeleton; cost verification hooks | Reports S-R1 later |
 | **S-R1** | **Reports** | `studio/modules/reports/` | 1 | Registered data emissions; cross-module dashboards | Multiple modules emitting |
 | **S-N1** | **Notes** | `studio/modules/notes/` | 1 | Meeting notes; link to Documents/Communications | C2 |
@@ -929,7 +937,8 @@ Design is the **creativity area**; Presentations **assembles and delivers** outp
 ### Build
 
 - Drawings, MEP, **light schedules** (plumbing schedules, etc.).
-- **IBC room-size / occupancy planner** — sq ft, furniture, occupancy rules (International Building Code); architect/build workflows.
+- **Codes (layered)** — IBC and **accessibility** rule packs owned by Core **C13** (synced from external code service); Build surfaces designer-friendly occupancy, egress, and clearance guidance. See [Studio plan S-B2](../studio/docs/STUDIO-IMPLEMENTATION-PLAN.md#s-b2--build--codes-ibc--accessibility).
+- **Space analysis / occupancy planner** — chart system for room program: furniture inventory, circulation, user group / occupant load, rules of thumb (advisory), and code cross-check against C13. Helps interior and architectural designers size spaces from occupancy, not just sq ft. See [S-B3](../studio/docs/STUDIO-IMPLEMENTATION-PLAN.md#s-b3--build--space-analysis--occupancy-planner).
 - **Tags on drawing sets** — label and identify items on plans/elevations/schedules. Drawing sets often specify products **not** in **Inventory**; tags should work standalone *or* **pull from Inventory** and link tagged items to `productPublicId` when a match exists. Goal: clearer drawing sets and smoother **install days** (field teams see what/where without reconciling paper vs spreadsheet).
 - **Drawing approval** workflow owned here — uses **Core users & roles** for approvers; orchestrator + operation envelope for sign-off steps.
 - Heavy drawing *viewers* remain Experience-layer (Studio); files in Core FileStore.
@@ -1165,7 +1174,7 @@ Core validation (rolled out incrementally):
 | **Phase 3+** | Mandatory third-party `migrations/` check; static SQL review (schema allowlist, block `platform` and foreign schemas for third-party); reject enable on violation — **Core C4** |
 | **Later** | Signed migration bundles for marketplace; optional dry-run in Studio admin before enable |
 
-See [§6 Core remaining](../../../docs/erganis-product-plan.md#core-remaining-work) · [§7 Studio module phases](../../../docs/erganis-product-plan.md#studio-module-implementation-phases) · [`PHASE-2.md`](./PHASE-2.md) · [§11 Implementation examples](./CORE-ARCHITECTURE.md#11-implementation-examples)
+See [§6 Core remaining](../../../docs/erganis-product-plan.md#core-remaining-work) · [§7 Studio module phases](../../../docs/erganis-product-plan.md#studio-module-implementation-phases) · [`CORE-IMPLEMENTATION-PLAN.md`](../core/docs/temp/CORE-IMPLEMENTATION-PLAN.md) · [§11 Implementation examples](../core/docs/temp/CORE-ARCHITECTURE.md#11-implementation-examples)
 
 ### Cross-module data references (decided)
 
@@ -1674,26 +1683,29 @@ User → Surface → Operation envelope → Orchestrator (lock) → Module steps
 
 > **Prioritization:** Items below are captured ideas — **not** delivery order. Rank each iteration by **biggest user needs** before scheduling ([§1](#feature-prioritization-how-to-read-this-plan)).
 
-### Core — platform (C0–C11 complete)
+### Core — platform (C0–C13 complete)
 
 See [§6 Core remaining](#core-remaining-work):
 
 - [x] **C0** — Nest shell, Postgres, layered `core/services/` + `core/packages/typescript/`
-- [x] **C1** — OIDC + local fallback, session, JWT, org, custom roles — [`PHASE-1.md`](../core/docs/temp/PHASE-1.md)
-- [x] **C2** — DAL + module loader + orchestrator + hello-world envelope smoke — [`PHASE-2.md`](../core/docs/temp/PHASE-2.md)
-- [x] **C3** — Orchestrator hardening (locks, partial/failed, envelope JSON Schema) — [`PHASE-C3.md`](../core/docs/temp/PHASE-C3.md)
-- [x] **C4** — Migration validation (third-party mandatory folder, schema allowlist) — [`PHASE-C4.md`](../core/docs/temp/PHASE-C4.md)
-- [x] **C5** — Module enable/disable per org; granular contributions disable — [`PHASE-C5.md`](../core/docs/temp/PHASE-C5.md)
-- [x] **C6** — FileStore (`LocalFileStore`, upload/download API) — [`PHASE-C6.md`](../core/docs/temp/PHASE-C6.md)
-- [x] **C7** — Surface API (parallel module loaders, composed load response) — [`PHASE-C7.md`](../core/docs/temp/PHASE-C7.md)
-- [x] **C8** — Public API JWT guard — [`PHASE-C8.md`](../core/docs/temp/PHASE-C8.md)
-- [x] **C9** — pg-boss jobs, outbox poller, FTS search, operation audit log — [`PHASE-C9.md`](../core/docs/temp/PHASE-C9.md)
-- [x] **C10** — UI toolbox / composition slot registry — [`PHASE-C10.md`](../core/docs/temp/PHASE-C10.md)
-- [x] **C11** — Sync API stub (pull/push, optimistic concurrency) — [`PHASE-C11.md`](../core/docs/temp/PHASE-C11.md)
+- [x] **C0** — Nest shell — [CORE plan](../core/docs/temp/CORE-IMPLEMENTATION-PLAN.md#c0--shell)
+- [x] **C1** — OIDC + local fallback, session, JWT, org, custom roles — [CORE plan](../core/docs/temp/CORE-IMPLEMENTATION-PLAN.md#c1--platform-auth)
+- [x] **C2** — DAL + module loader + orchestrator + hello-world envelope smoke — [CORE plan](../core/docs/temp/CORE-IMPLEMENTATION-PLAN.md#c2--module-loader--dal--envelope-smoke)
+- [x] **C3** — Orchestrator hardening (locks, partial/failed, envelope JSON Schema) — [CORE plan](../core/docs/temp/CORE-IMPLEMENTATION-PLAN.md#c3--orchestrator-hardening)
+- [x] **C4** — Migration validation (third-party mandatory folder, schema allowlist) — [CORE plan](../core/docs/temp/CORE-IMPLEMENTATION-PLAN.md#c4--migration-validation)
+- [x] **C5** — Module enable/disable per org; granular contributions disable — [CORE plan](../core/docs/temp/CORE-IMPLEMENTATION-PLAN.md#c5--module-enabledisable-per-org)
+- [x] **C6** — FileStore (`LocalFileStore`, upload/download API) — [CORE plan](../core/docs/temp/CORE-IMPLEMENTATION-PLAN.md#c6--filestore)
+- [x] **C7** — Surface API (parallel module loaders, composed load response) — [CORE plan](../core/docs/temp/CORE-IMPLEMENTATION-PLAN.md#c7--surface-api)
+- [x] **C8** — Public API JWT guard — [CORE plan](../core/docs/temp/CORE-IMPLEMENTATION-PLAN.md#c8--public-api-jwt-guard)
+- [x] **C9** — pg-boss jobs, outbox poller, FTS search, operation audit log — [CORE plan](../core/docs/temp/CORE-IMPLEMENTATION-PLAN.md#c9--platform-services-jobs-outbox-search)
+- [x] **C10** — UI toolbox / composition slot registry — [CORE plan](../core/docs/temp/CORE-IMPLEMENTATION-PLAN.md#c10--ui-toolbox--composition)
+- [x] **C11** — Sync API stub (pull/push, optimistic concurrency) — [CORE plan](../core/docs/temp/CORE-IMPLEMENTATION-PLAN.md#c11--sync-api-stub)
+- [x] **C12** — UI skin & theme preview (design tokens + component skins) — [CORE plan](../core/docs/temp/CORE-IMPLEMENTATION-PLAN.md#c12--ui-skin--theme-preview)
+- [x] **C13** — Codes provider adapter (IBC / accessibility rule packs, external sync) — [CORE plan](../core/docs/temp/CORE-IMPLEMENTATION-PLAN.md#c13--codes-provider-adapter)
 
 ### Studio — modules (per-module slices)
 
-See [§7 Studio module phases](#studio-module-implementation-phases):
+See [§7 Studio module phases](#studio-module-implementation-phases) and [`STUDIO-IMPLEMENTATION-PLAN.md`](../studio/docs/STUDIO-IMPLEMENTATION-PLAN.md):
 
 - [x] **Ref** — hello-world stub (`studio/modules/hello-world/`)
 - [ ] **S0** — Studio web shell + shared API client + login
@@ -1704,6 +1716,8 @@ See [§7 Studio module phases](#studio-module-implementation-phases):
 - [ ] **S-Des1** — Design v1 (spaces, palettes, mood boards)
 - [ ] **S-Pr1** — Presentations (proposal builder)
 - [ ] **S-B1** — Build (drawings, tags, approvals)
+- [ ] **S-B2** — Build Codes (IBC + accessibility, Core C13)
+- [ ] **S-B3** — Build space analysis / occupancy planner
 - [ ] **S-Bus1** — Business (budgeting skeleton)
 - [ ] **S-R1** — Reports (data emissions)
 - [ ] **S-N1** — Notes
@@ -2007,10 +2021,11 @@ Use `Ex: TODO` in specs where behavior is not yet finalized.
 
 | Area | Status | Reference |
 |------|--------|-----------|
-| Core C0 shell | **Done** | [`PHASE-0.md`](../core/docs/temp/PHASE-0.md) |
-| Core C1 auth | **Done** | [`PHASE-1.md`](../core/docs/temp/PHASE-1.md) |
-| Core C2 loader + orchestrator | **Done** | [`PHASE-2.md`](../core/docs/temp/PHASE-2.md) |
-| Core C3–C11 remaining | **Next** | [§6 Core remaining](#core-remaining-work) |
+| Core C0 shell | **Done** | [CORE plan](../core/docs/temp/CORE-IMPLEMENTATION-PLAN.md#c0--shell) |
+| Core C1 auth | **Done** | [CORE plan](../core/docs/temp/CORE-IMPLEMENTATION-PLAN.md#c1--platform-auth) |
+| Core C2 loader + orchestrator | **Done** | [CORE plan](../core/docs/temp/CORE-IMPLEMENTATION-PLAN.md#c2--module-loader--dal--envelope-smoke) |
+| Core platform (C0–C13) | **Done** | [§6 Core](#6-core) |
+| Studio module slices | **Next** | [§7 Studio](#7-studio) |
 | Studio module slices | **After Core C6–C7** | [§7 Studio module phases](#studio-module-implementation-phases) |
 | Envelope rollback & HTTP | **Decided** (P35) | [§13](#13-operation-envelope--orchestration), [§22 P35](#p35-envelope-partial-success-vs-full-failure) |
 | SSO / auth | **Decided** (P36) | [§6 Authentication](#authentication-decided--22-p36-sso-org-login-vs-communications-oauth), [§22 P36](#p36-sso-org-login-vs-communications-oauth) |
@@ -2472,7 +2487,7 @@ Kickoff decisions (P35 hybrid txn, P36 OIDC, module loader, schema-per-module, P
 |------|--------|
 | **Deliverable** | `TEST_STRATEGY` via APM (`.apm/templates/TEST_STRATEGY.template.md`) |
 | **Timing** | Expand per Core/Studio phase |
-| **Scope** | Core C0–C11 + Studio module slices; Inventory tests in **S-I2** |
+| **Scope** | Core C0–C13 + Studio module slices; Inventory tests in **S-I2** |
 | **Backlog** | [§18 Test plan](#test-plan-required--20-39) |
 
 ---

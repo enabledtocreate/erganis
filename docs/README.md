@@ -3,6 +3,17 @@
 ## Product planning
 
 - [erganis-product-plan.md](erganis-product-plan.md) — **Primary planning document** (vision, architecture, stack, modules, backlog, open questions)
+- [IMPLEMENTATION-PLANS.md](IMPLEMENTATION-PLANS.md) — **Consolidated delivery plans** per repo (Core C0–C11, Studio S*, Agora, Companion, Lyceum)
+
+## Per-project implementation plans
+
+| Project | Plan |
+|---------|------|
+| Core | [`core/docs/temp/CORE-IMPLEMENTATION-PLAN.md`](../core/docs/temp/CORE-IMPLEMENTATION-PLAN.md) |
+| Studio | [`studio/docs/STUDIO-IMPLEMENTATION-PLAN.md`](../studio/docs/STUDIO-IMPLEMENTATION-PLAN.md) |
+| Agora | [`agora/docs/AGORA-IMPLEMENTATION-PLAN.md`](../agora/docs/AGORA-IMPLEMENTATION-PLAN.md) |
+| Companion | [`companion/docs/COMPANION-IMPLEMENTATION-PLAN.md`](../companion/docs/COMPANION-IMPLEMENTATION-PLAN.md) |
+| Lyceum (Mnemosyne) | [`lyceum/docs/LYCEUM-IMPLEMENTATION-PLAN.md`](../lyceum/docs/LYCEUM-IMPLEMENTATION-PLAN.md) |
 
 ## Per-project documentation (temporary)
 

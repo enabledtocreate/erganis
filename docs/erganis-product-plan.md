@@ -19,7 +19,7 @@
 7. [Studio](#7-studio)
 8. [Erganis Agora](#8-erganis-agora)
 9. [Companion](#9-companion)
-10. [Mnemosyne (Lyceum)](#10-mnemosyne-lyceum)
+10. [Lyceum](#10-lyceum)
 11. [Module catalog](#11-module-catalog)
 12. [Module system & manifests](#12-module-system--manifests)
 13. [Operation envelope & orchestration](#13-operation-envelope--orchestration)
@@ -89,7 +89,7 @@ AI and contributors should **not** hand-edit APM-generated documents (`docs/ARCH
 
 **Erganis Platform** is a modular, workflow-driven ecosystem for interior design and the broader build environment.
 
-**Five deployable children:** **Core**, **Studio**, **Agora**, **Companion**, **Mnemosyne**. **Core** is the universal foundation — not Studio-only.
+**Five deployable children:** **Core**, **Studio**, **Agora**, **Companion**, **Lyceum**. **Core** is the universal foundation — not Studio-only. Shared **UI libraries** live in **`erganis-ui`** (`ui/`) — consumed by Studio, Lyceum, and Companion ([`UI-ARCHITECTURE.md`](../ui/docs/UI-ARCHITECTURE.md)).
 
 **Three pillars:**
 
@@ -113,7 +113,10 @@ AI and contributors should **not** hand-edit APM-generated documents (`docs/ARCH
 | **Erganis Agora** | Public vendor website + global catalog |
 | **Agora org module** | Org-scoped vendors + trade tracking (lives in `agora/modules/`) |
 | **Companion** | Mobile app (`companion/`) — **React Native** |
-| **Mnemosyne** | Historical design reference site (`lyceum/`) — memory of styles; *Lyceum* repo folder |
+| **Lyceum** | Study platform (`lyceum/`) — umbrella for **Mnemosyne** (styles) and **Nomodeion** (certification study) |
+| **Mnemosyne** | Lyceum component — historical design reference (memory of styles) |
+| **Nomodeion** | Lyceum component — *nomoi* (νόμος): NCIDQ, LEED, WELL, accessibility study paths |
+| **erganis-ui** | Shared UI libraries (`ui/`) — headless + Shadcn/MAUI/RN adapters |
 | **Guild** | Optional domain term for vendor collectives — not a repo name |
 | **Surface** | Workflow boundary (not a page) |
 | **Module** | Pluggable domain unit |
@@ -186,7 +189,8 @@ erganis/                    # Erganis Platform (parent)
 ├── studio/                 # erganis-studio
 ├── agora/                  # erganis-agora
 ├── companion/              # erganis-companion
-├── lyceum/                 # erganis-lyceum (Mnemosyne)
+├── lyceum/                 # erganis-lyceum (Mnemosyne + Nomodeion)
+├── ui/                     # erganis-ui (shared UI libraries — planned submodule)
 └── docs/
 ```
 
@@ -208,7 +212,8 @@ Core **Scraper Services**     →  feeds Agora profiles, Mnemosyne, other consum
 | First-party modules (Studio) | `studio/modules/` |
 | Third-party modules | `studio/modules/third-party/` |
 | Agora service + org module | `agora/` (`api/`, `web/`, `modules/`) |
-| Mnemosyne (Lyceum) | `lyceum/` (`web/`, optional `api/`) |
+| Lyceum | `lyceum/` (`web/`, optional `api/`) — Mnemosyne + Nomodeion |
+| erganis-ui | `ui/` — shared UI libraries (planned submodule) |
 
 ### Unified application flow
 
@@ -275,7 +280,9 @@ flowchart TD
 | `packages/` | Hand-maintained libraries — `packages/typescript/` (v1); `packages/dotnet/` reserved for NuGet |
 | `infrastructure/` | Deploy; Docker optional for local Postgres |
 | `scripts/` | Setup, migrate, update CLI |
-| `tools/` | Developer tooling — contract readers, module connection generators, SDK/codegen helpers |
+| `tools/` | Developer tooling — contract readers, SDK/codegen (C15) |
+
+**UI libraries** are **not** in `core/` — see **`erganis-ui`** (`ui/`) submodule.
 
 ### Responsibilities
 
@@ -407,8 +414,12 @@ Finish **Core platform** before stacking Studio module UI. Ordered by dependency
 | **C10 — UI toolbox** | `core/` | Layout/slot registry; **design tokens + component skins (C12)**; theme preview; module UI contribution wiring | Studio composed shell |
 | **C11 — Sync API** | `core/` | Desktop offline replica protocol; conflict detection (`expectedVersion`); push/pull endpoints | Studio desktop |
 | **C12 — UI skin & theme** | `core/` | Design tokens (colors, fonts, spacing) + editable component skins per slot; theme preview API | Studio shell white-label, Client portal |
+| **C13 — Agent contract layer** | `core/` | Structured JSON for AI/tools; capability discovery; typed surface payloads | Agents, Nomodeion assistants |
+| **C14 — Workflow + titled nodes** | `core/` | Pipeline definitions; node titles; long-running workflow state | Build approvals, Business PO |
+| **C15 — Contract / SDK toolchain** | `core/` | `core/tools/` codegen; Core Contracts Catalog; OpenAPI → TS SDK | Studio S0, Companion, integrators |
+| **C16 — UI composition coordination** | `core/` + `ui/` | JSON schemas aligned with **erganis-ui**; module UI validation | Studio S0, Lyceum web |
 
-**Not Core:** Documents, Inventory, Design, Planner, **Codes (IBC / accessibility)**, etc. — see [§7 Studio module phases](#studio-module-implementation-phases). Building-code logic is **Build module** domain logic (S-B2/S-B3), not a Core service.
+**Not Core:** Documents, Inventory, Design, Planner, **Codes**, **Standards**, etc. — see [§7 Studio module phases](#studio-module-implementation-phases). Building-code and professional standards logic is **Build module** domain (S-B2/S-B4), not Core.
 
 ### Test plan (decided — [§22 P39](#p39--core-test-plan))
 
@@ -494,7 +505,8 @@ Each first-party module ships in **slices** — schema + handlers first (Nest mo
 | **S-Pr1** | **Presentations** | `studio/modules/presentations/` | 1 | Proposal builder; Inventory/Design composition blocks | Inventory S-I1, Design S-Des1 |
 | **S-B1** | **Build** | `studio/modules/build/` | 1 | Drawing vault refs; Tags on sets; approval envelope | Documents S-D1, C3 locks |
 | **S-B2** | **Build** | same | 2 | **Codes** module logic — IBC + accessibility rule packs owned by Build; jurisdiction/edition aware; external sync via module job | S-B1, C2, C9 |
-| **S-B3** | **Build** | same | 3 | **Space analysis chart** — furniture footprint, circulation, occupancy, rules of thumb, code cross-check | S-B2, S-I1 optional |
+| **S-B3** | **Build** | same | 3 | **Space analysis chart** — furniture, circulation, occupancy, rules of thumb, code + standards cross-check | S-B2, S-B4, S-I1 optional |
+| **S-B4** | **Build** | same | 4 | **Standards** — WELL/LEED criteria on project, firm standards, professional practice overlays | S-B2, S-B1 |
 | **S-Bus1** | **Business** | `studio/modules/business/` | 1 | Budgeting skeleton; cost verification hooks | Reports S-R1 later |
 | **S-R1** | **Reports** | `studio/modules/reports/` | 1 | Registered data emissions; cross-module dashboards | Multiple modules emitting |
 | **S-N1** | **Notes** | `studio/modules/notes/` | 1 | Meeting notes; link to Documents/Communications | C2 |
@@ -673,53 +685,55 @@ companion/
 
 ---
 
-## 10. Mnemosyne (Lyceum)
+## 10. Lyceum
 
-**Product name:** **Mnemosyne** · **GitHub:** `erganis-lyceum` · **Path:** `lyceum/` · **Role:** Standalone public website — lean, designer-focused reference for **historical styles** (not a bloated encyclopedia).
+**GitHub:** `erganis-lyceum` · **Path:** `lyceum/` · **Role:** **Hall of learning** — umbrella for study and reference products.
 
-### Brand & concept
+**Lyceum** (*lykeion*) is the repository folder and platform space. Consumer-facing **brands** inside it:
 
-**Mnemosyne** — Greek muse of **memory** — names what the product is: the memory of design history, available when designers need it on deadline.
+| Brand | Meaning | Focus |
+|-------|---------|--------|
+| **Mnemosyne** | Muse of memory | Historical styles — curated design history for practice |
+| **Nomodeion** | Place of the *nomoi* (νόμος) | Certification study — NCIDQ, **LEED**, **WELL**, accessibility paths |
 
-The experience is built around what the **Muses** represented (inspiration, craft, and domain knowledge across the arts) and the spirit of the **museum** — curated, trustworthy collections you browse to learn and apply — without becoming a dense academic archive.
+See [`LYCEUM-IMPLEMENTATION-PLAN.md`](../lyceum/docs/LYCEUM-IMPLEMENTATION-PLAN.md).
 
-**Lyceum** (*lykeion* — the ancient grove and hall of learning, associated with Aristotle’s school) is the **repository folder name**: a place of study, not the consumer-facing brand. In UX: **Mnemosyne**; in the monorepo: `lyceum/`.
+### Mnemosyne
 
-| Considered | Outcome |
-|------------|---------|
-| Erganis Historical Styles | Working title — retired |
-| Museion | Contender — shrine of the Muses; mnemonic overlap with “museum” |
-| **Mnemosyne** | **Chosen** — memory, muses, museum-adjacent meaning |
+Help designers with **actionable style guidance** — era characteristics, motifs, palettes, furniture/forms, do/don't pairings — optimized for **practice**, not academic completeness.
 
-### Vision
+Distinct from **Design** (firm project creativity) and **Agora** (vendors/products).
 
-Help designers of all forms (interior, architectural, decorative arts) with **specific, actionable** style guidance — era characteristics, motifs, palettes, furniture/forms, do/don't pairings — optimized for **practice**, not academic completeness.
+### Nomodeion
 
-Distinct from **Design** module (firm project creativity) and **Agora** (vendors/products). May cross-link from Studio Design and Presentations as reference.
+**Study and exam prep** for professional credentials — not live project rule lookup (that is Studio **Build** S-B2 Codes / S-B4 Standards).
+
+**Tier 1 tracks:** NCIDQ (IDFX, IDPX, PRAC), LEED (GA, AP ID+C), **WELL AP**, accessibility certification study.
+
+**Tier 2 (later):** Fitwel, EDAC, LC (NCQLP), NKBA, Living Building Challenge, Passive House, CEU tracking.
+
+**Cross-link:** Nomodeion study → “apply on project” → Build Standards (S-B4) when implemented.
 
 ### Layout
 
 ```
 lyceum/
-├── web/       # Public site — Mnemosyne (Next.js + shadcn + Tailwind)
-├── api/       # Optional Nest API + dedicated DB if content volume warrants; else Core-backed
-└── shared/    # Types aligned with Core contracts
+├── web/           # Shared shell — /mnemosyne, /nomodeion routes
+├── api/           # Optional Nest API
+└── shared/        # Types aligned with Core + erganis-ui contracts
 ```
 
-### Content & tooling
-
-- Curated style entries (editorial + structured fields) — the “collection”
-- Tags, era, region, related movements
-- **Core Scraper Services** may refresh or suggest external reference metadata where configured (XPath recipes, meta tags)
-- Search and browse tuned for designers on deadline
+**Stack:** Next.js + `@erganis/ui-shadcn` from [`erganis-ui`](../ui/docs/UI-ARCHITECTURE.md).
 
 ### Relationship to platform
 
 | Link | Detail |
 |------|--------|
-| **Core** | Contracts, Scraper Services, optional shared auth |
-| **Studio / Design** | Embed or link Mnemosyne style references in exploration work |
-| **Agora** | Separate — vendors/products vs design history |
+| **Core** | Contracts, Scraper Services, optional auth; C13 agent JSON (optional) |
+| **erganis-ui** | Shared web design system with Studio |
+| **Studio / Design** | Mnemosyne style references |
+| **Studio / Build** | Nomodeion study ↔ Build Codes/Standards on project |
+| **Agora** | Separate — vendors/products |
 
 **Open:** dedicated DB vs Core content store, editorial workflow ([§20](#20-open-questions)).
 
@@ -936,8 +950,9 @@ Design is the **creativity area**; Presentations **assembles and delivers** outp
 ### Build
 
 - Drawings, MEP, **light schedules** (plumbing schedules, etc.).
-- **Codes (Build module logic)** — IBC and **accessibility** rule packs owned by the **Build module** (its own schema; synced from an external code service via a module job). Building-code logic is domain logic, **not** a Core service. Build surfaces designer-friendly occupancy, egress, and clearance guidance. See [Studio plan S-B2](../studio/docs/STUDIO-IMPLEMENTATION-PLAN.md#s-b2--build--codes-ibc--accessibility).
-- **Space analysis / occupancy planner** — chart system for room program: furniture inventory, circulation, user group / occupant load, rules of thumb (advisory), and code cross-check against the Build Codes layer (S-B2). Helps interior and architectural designers size spaces from occupancy, not just sq ft. See [S-B3](../studio/docs/STUDIO-IMPLEMENTATION-PLAN.md#s-b3--build--space-analysis--occupancy-planner).
+- **Codes (Build module logic)** — IBC and **accessibility** rule packs — **S-B2**. Not a Core service.
+- **Standards (Build module logic)** — WELL/LEED **project criteria**, firm standards, professional practice overlays — **S-B4**. Distinct from **Nomodeion** (exam study).
+- **Space analysis / occupancy planner** — S-B3; cross-checks Codes (S-B2) and Standards (S-B4). See [Studio plan](../studio/docs/STUDIO-IMPLEMENTATION-PLAN.md).
 - **Tags on drawing sets** — label and identify items on plans/elevations/schedules. Drawing sets often specify products **not** in **Inventory**; tags should work standalone *or* **pull from Inventory** and link tagged items to `productPublicId` when a match exists. Goal: clearer drawing sets and smoother **install days** (field teams see what/where without reconciling paper vs spreadsheet).
 - **Drawing approval** workflow owned here — uses **Core users & roles** for approvers; orchestrator + operation envelope for sign-off steps.
 - Heavy drawing *viewers* remain Experience-layer (Studio); files in Core FileStore.
@@ -1560,7 +1575,7 @@ Use this table to decide **which repo owns what**. Rows follow **stack order** (
 | 4 | **Experience** — Erganis Agora (public site) | `agora/` (`web/`) | **Next.js**, React, TypeScript, shadcn/ui, Tailwind — same web pattern as Studio. Consumes **Agora API** (not Core DB directly). **MapLibre** for vendor map. | Agora ↔ Core sync conflict rules ([§20](#20-open-questions) #2). |
 | 5 | **Experience** — Mnemosyne (public site) | `lyceum/` (`web/`) | **Next.js**, React, TypeScript, shadcn/ui, Tailwind. Brand **Mnemosyne**; folder **`lyceum/`**, repo **`erganis-lyceum`**. Lean style-reference browse/search. | Dedicated Lyceum DB vs Core content store; editorial workflow ([§20](#20-open-questions) #32). |
 | 6 | **Experience** — Companion (mobile) | `companion/` (`app/`) | **React Native**, **TypeScript**. Consumes **Core Public API** only — native client, not a web wrapper; no hosted business logic. **MapLibre** when maps ship. | Maps in v1 vs defer to Agora web ([§20](#20-open-questions) #4). Which Public API surfaces ship first. |
-| 7 | **Building block** — Shared web UI & API clients | `studio/` (`shared/`) | shadcn/ui components, Tailwind tokens, Surface/Public API clients, **sync layer** for desktop. Swap boundary for all Studio web experiences. | Module UI import strategy (build-time vs dynamic) affects third-party modules ([§20](#20-open-questions) #24). |
+| 7 | **Building block** — Shared web UI | `ui/` (`erganis-ui`) + thin `studio/shared/` | **`@erganis/ui-react`** headless + **`@erganis/ui-shadcn`** default DS; Studio/Lyceum consume same packages. Core C10/C12 JSON APIs. | MAUI (`ui-maui`), RN (`ui-native`); third-party DS ([`UI-ARCHITECTURE.md`](../ui/docs/UI-ARCHITECTURE.md)) |
 | 8 | **Building block** — Icon assets | External static host | Free vector set (e.g. **Lucide** — TBD). **Not** bundled in app repos. | Self-hosted vs CDN; Lucide vs Tabler vs Phosphor ([§20](#20-open-questions) #6). |
 | 9 | **Building block** — Drawing viewers | `studio/` (Experience) | Files in Core **FileStore**; **viewers render in Studio** (selectively Client). Approvals via operation envelope + locks. | 2D DXF vs BIM first; spike options in [§17](#17-explorations--spikes) — not final. |
 | 10 | **API** — Core Surface API | `core/` (`services/`) | **NestJS**, TypeScript. Primary gateway for Studio apps and **external apps** integrating with an org instance. Org-scoped RBAC. | Org **API composer** — merge enabled-module routes/OpenAPI ([§21](#21-core-readiness--design-backlog) E). Disabled-module response shape ([§20](#20-open-questions) #20). |
@@ -1700,6 +1715,21 @@ See [§6 Core remaining](#core-remaining-work):
 - [x] **C10** — UI toolbox / composition slot registry — [CORE plan](../core/docs/temp/CORE-IMPLEMENTATION-PLAN.md#c10--ui-toolbox--composition)
 - [x] **C11** — Sync API stub (pull/push, optimistic concurrency) — [CORE plan](../core/docs/temp/CORE-IMPLEMENTATION-PLAN.md#c11--sync-api-stub)
 - [x] **C12** — UI skin & theme preview (design tokens + component skins) — [CORE plan](../core/docs/temp/CORE-IMPLEMENTATION-PLAN.md#c12--ui-skin--theme-preview)
+- [ ] **C13** — Agent contract layer (structured JSON, capability discovery)
+- [ ] **C14** — Workflow definitions + titled pipeline nodes
+- [ ] **C15** — Contract / SDK toolchain (`core/tools/`)
+- [ ] **C16** — UI composition + **erganis-ui** coordination
+
+### erganis-ui (shared UI libraries)
+
+See [`UI-ARCHITECTURE.md`](../ui/docs/UI-ARCHITECTURE.md). **GitHub repo created at C16/UI0** — TypeScript only in v1.
+
+- [ ] **UI0–UI2** — `ui-contracts`, `ui-react`, `ui-shadcn` + layout JSON Schema codegen
+- [ ] **UI3** — Studio S0 integration
+- [ ] **UI4** — Lyceum web integration
+- *(Deferred — doc only)* **UI5** RN, **UI6** MAUI
+
+Layout schemas: [`core/contracts/schemas/composition/`](../core/contracts/schemas/composition/README.md)
 
 ### Studio — modules (per-module slices)
 
@@ -1716,6 +1746,7 @@ See [§7 Studio module phases](#studio-module-implementation-phases) and [`STUDI
 - [ ] **S-B1** — Build (drawings, tags, approvals)
 - [ ] **S-B2** — Build Codes (IBC + accessibility — Build module domain logic)
 - [ ] **S-B3** — Build space analysis / occupancy planner
+- [ ] **S-B4** — Build Standards (WELL/LEED on project, firm standards)
 - [ ] **S-Bus1** — Business (budgeting skeleton)
 - [ ] **S-R1** — Reports (data emissions)
 - [ ] **S-N1** — Notes

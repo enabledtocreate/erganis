@@ -8,9 +8,12 @@ The **parent repo** [erganis](https://github.com/enabledtocreate/erganis) is the
 | `erganis-studio` | `studio/` | Studio + client apps, modules |
 | `erganis-agora` | `agora/` | Public vendor site + API |
 | `erganis-companion` | `companion/` | Mobile app |
-| `erganis-lyceum` | `lyceum/` | Mnemosyne — historical styles reference (web, optional api) |
+| `erganis-lyceum` | `lyceum/` | Lyceum — Mnemosyne + Nomodeion |
+| `erganis-ui` | `ui/` | TypeScript UI libs — **create repo at C16/UI0** (not in `create-repos.ps1` yet) |
 
 Legacy names (`erganis-platform`, `erganis-app-studio-portal`, `erganis-app-id-companion`) should be renamed or replaced on GitHub when migrating.
+
+**Not in `create-repos.ps1`:** `erganis-ui` — deferred until Core C16 / UI0 (TypeScript-only v1). MAUI and React Native packages are documented only.
 
 ## Create sub-repos (one-time)
 

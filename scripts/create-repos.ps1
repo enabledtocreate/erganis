@@ -6,6 +6,7 @@ $org = "enabledtocreate"
 $repos = @(
     @{ Name = "erganis-core"; Description = "Core: contracts, data, infrastructure, services, packages, scripts" },
     @{ Name = "erganis-studio"; Description = "Studio and client apps, modules" },
+    @{ Name = "erganis-notes"; Description = "Shared Notes module: constructable documents, annotations, dialogue, bibliography" },
     @{ Name = "erganis-agora"; Description = "Public vendor catalog: web, api, shared" },
     @{ Name = "erganis-companion"; Description = "Companion mobile app" },
     @{ Name = "erganis-lyceum"; Description = "Mnemosyne — historical design styles reference (web, optional api)" }

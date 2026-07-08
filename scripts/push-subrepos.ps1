@@ -5,7 +5,7 @@ $ErrorActionPreference = "Stop"
 $org = "enabledtocreate"
 $root = Split-Path -Parent $PSScriptRoot
 
-foreach ($d in @("core", "studio", "agora", "companion", "lyceum")) {
+foreach ($d in @("core", "studio", "notes", "agora", "companion", "lyceum")) {
     if (-not (Test-Path "$root\$d")) {
         Write-Host "Missing $root\$d - run from erganis repo root." -ForegroundColor Red
         exit 1
@@ -15,6 +15,7 @@ foreach ($d in @("core", "studio", "agora", "companion", "lyceum")) {
 $repos = @(
     @{ name = "erganis-core"; desc = "Core: contracts, data, infrastructure, services, packages, scripts" },
     @{ name = "erganis-studio"; desc = "Studio and client apps, modules" },
+    @{ name = "erganis-notes"; desc = "Shared Notes module: constructable documents, annotations, dialogue, bibliography" },
     @{ name = "erganis-agora"; desc = "Public vendor catalog: web, api, shared" },
     @{ name = "erganis-companion"; desc = "Companion mobile app" },
     @{ name = "erganis-lyceum"; desc = "Mnemosyne — historical design styles reference (web, optional api)" }
@@ -55,6 +56,7 @@ function Push-Subrepo {
 
 Push-Subrepo -dir "core" -repoName "erganis-core" -commitMsg "Initial Core"
 Push-Subrepo -dir "studio" -repoName "erganis-studio" -commitMsg "Initial Studio"
+Push-Subrepo -dir "notes" -repoName "erganis-notes" -commitMsg "Initial Erganis Notes (docs scaffold)"
 Push-Subrepo -dir "agora" -repoName "erganis-agora" -commitMsg "Initial Erganis Agora"
 Push-Subrepo -dir "companion" -repoName "erganis-companion" -commitMsg "Initial Companion"
 Push-Subrepo -dir "lyceum" -repoName "erganis-lyceum" -commitMsg "Initial Erganis Lyceum (Mnemosyne)"

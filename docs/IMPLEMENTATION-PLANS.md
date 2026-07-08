@@ -4,7 +4,8 @@ Consolidated phase plans per repository. The product plan ([`erganis-product-pla
 
 | Project | Plan | Phases | Status |
 |---------|------|--------|--------|
-| **Core** | [`core/docs/temp/CORE-IMPLEMENTATION-PLAN.md`](../core/docs/temp/CORE-IMPLEMENTATION-PLAN.md) | C0–C12 done; **C13–C16 planned** | C0–C12 **complete** |
+| **Core** | [`core/docs/temp/CORE-IMPLEMENTATION-PLAN.md`](../core/docs/temp/CORE-IMPLEMENTATION-PLAN.md) | C0–C16 | **Complete** |
+| **Notes** | [`notes/docs/NOTES-IMPLEMENTATION-PLAN.md`](../notes/docs/NOTES-IMPLEMENTATION-PLAN.md) | N0–N3 | Docs scaffold only |
 | **erganis-ui** | [`ui/docs/UI-ARCHITECTURE.md`](../ui/docs/UI-ARCHITECTURE.md) | UI0–UI4 (TS v1); UI5–UI6 doc only | Docs scaffold; **GitHub at UI0** |
 | **Studio** | [`studio/docs/STUDIO-IMPLEMENTATION-PLAN.md`](../studio/docs/STUDIO-IMPLEMENTATION-PLAN.md) | Ref, S0, S-D1…S-3P; **Build S-B1–B4** | Ref done |
 | **Agora** | [`agora/docs/AGORA-IMPLEMENTATION-PLAN.md`](../agora/docs/AGORA-IMPLEMENTATION-PLAN.md) | A0–A4 | Not started |

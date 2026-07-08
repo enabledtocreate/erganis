@@ -89,7 +89,7 @@ AI and contributors should **not** hand-edit APM-generated documents (`docs/ARCH
 
 **Erganis Platform** is a modular, workflow-driven ecosystem for interior design and the broader build environment.
 
-**Five deployable children:** **Core**, **Studio**, **Agora**, **Companion**, **Lyceum**. **Core** is the universal foundation — not Studio-only. Shared **UI libraries** live in **`erganis-ui`** (`ui/`) — consumed by Studio, Lyceum, and Companion ([`UI-ARCHITECTURE.md`](../ui/docs/UI-ARCHITECTURE.md)).
+**Five deployable children:** **Core**, **Studio**, **Agora**, **Companion**, **Lyceum**. **Core** is the universal foundation — not Studio-only. Shared **Notes** domain lives in **`erganis-notes`** (`notes/`). Shared **UI libraries** live in **`erganis-ui`** (`ui/`) — consumed by Studio, Lyceum, and Companion ([`UI-ARCHITECTURE.md`](../ui/docs/UI-ARCHITECTURE.md)).
 
 **Three pillars:**
 
@@ -110,6 +110,7 @@ AI and contributors should **not** hand-edit APM-generated documents (`docs/ARCH
 | **Erganis Platform** | The whole ecosystem |
 | **Core** | Base runtime (`core/`, `erganis-core`) |
 | **Studio** | Designer + client apps + modules (`studio/`) — **web and desktop** |
+| **erganis-notes** | Shared Notes module (`notes/`) — constructable documents, annotations, dialogue, bibliography |
 | **Erganis Agora** | Public vendor website + global catalog |
 | **Agora org module** | Org-scoped vendors + trade tracking (lives in `agora/modules/`) |
 | **Companion** | Mobile app (`companion/`) — **React Native** |
@@ -118,6 +119,8 @@ AI and contributors should **not** hand-edit APM-generated documents (`docs/ARCH
 | **Nomodeion** | Lyceum component — *nomoi* (νόμος): NCIDQ, LEED, WELL, accessibility study paths |
 | **erganis-ui** | Shared UI libraries (`ui/`) — headless + Shadcn/MAUI/RN adapters |
 | **Guild** | Optional domain term for vendor collectives — not a repo name |
+| **ACL** | **Access Control List** — rules defining who may read, write, or administer a resource; Core RBAC supplies roles; modules apply authorization at resource and **connection** level |
+| **Audit (platform)** | Core **operation audit log** (C9) — who ran which envelope operation; modules may add domain revision history (e.g. Notes `revisions`) |
 | **Surface** | Workflow boundary (not a page) |
 | **Module** | Pluggable domain unit |
 | **Operation envelope** | Standard payload for orchestrated actions |
@@ -187,6 +190,7 @@ Persistence = source of truth. Search = findability (PostgreSQL FTS v1; dedicate
 erganis/                    # Erganis Platform (parent)
 ├── core/                   # erganis-core
 ├── studio/                 # erganis-studio
+├── notes/                  # erganis-notes (shared Notes module)
 ├── agora/                  # erganis-agora
 ├── companion/              # erganis-companion
 ├── lyceum/                 # erganis-lyceum (Mnemosyne + Nomodeion)
@@ -210,6 +214,7 @@ Core **Scraper Services**     →  feeds Agora profiles, Mnemosyne, other consum
 |------|----------|
 | Core | `core/` |
 | First-party modules (Studio) | `studio/modules/` |
+| **Notes (shared)** | `notes/modules/notes/` — loaded by Core; Studio, Client, Lyceum consume |
 | Third-party modules | `studio/modules/third-party/` |
 | Agora service + org module | `agora/` (`api/`, `web/`, `modules/`) |
 | Lyceum | `lyceum/` (`web/`, optional `api/`) — Mnemosyne + Nomodeion |
@@ -507,9 +512,9 @@ Each first-party module ships in **slices** — schema + handlers first (Nest mo
 | **S-B2** | **Build** | same | 2 | **Codes** module logic — IBC + accessibility rule packs owned by Build; jurisdiction/edition aware; external sync via module job | S-B1, C2, C9 |
 | **S-B3** | **Build** | same | 3 | **Space analysis chart** — furniture, circulation, occupancy, rules of thumb, code + standards cross-check | S-B2, S-B4, S-I1 optional |
 | **S-B4** | **Build** | same | 4 | **Standards** — WELL/LEED criteria on project, firm standards, professional practice overlays | S-B2, S-B1 |
-| **S-Bus1** | **Business** | `studio/modules/business/` | 1 | Budgeting skeleton; cost verification hooks | Reports S-R1 later |
+| **S-Bus1** | **Business** | `studio/modules/business/` | 1 | Budgeting skeleton; cost verification hooks — **requires `erganis.notes`** | Notes enabled, Reports S-R1 later |
 | **S-R1** | **Reports** | `studio/modules/reports/` | 1 | Registered data emissions; cross-module dashboards | Multiple modules emitting |
-| **S-N1** | **Notes** | `studio/modules/notes/` | 1 | Meeting notes; link to Documents/Communications | C2 |
+| **S-N1** | **Notes** | `notes/modules/notes/` | 1 | Kind components; connections; bibliography ([`erganis-notes`](../notes/docs/NOTES-IMPLEMENTATION-PLAN.md)) | Notes N0–N1, C2 |
 | **S-Ago1** | **Agora (org)** | `agora/modules/` | 1 | Org vendor list; trade account status; Core sync | Agora API, C2 |
 | **S-3P** | Third-party | `studio/modules/third-party/` | — | Mandatory `migrations/`; own schema only; API-first ([§12](#module-migrations-decided)) | **C4** validation |
 
@@ -748,8 +753,8 @@ First-party modules live primarily in `studio/modules/`. **Exception:** Agora or
 | **Planner** | studio | Kanban, Gantt, **Tasks** (daily todo list), **calendar/scheduling**, vendor outreach, staff rotations, MEP *project* milestones |
 | **Communications** | studio | Email (Gmail/Outlook/etc.), vendor & client correspondence; iCal link emission when enabled (feeds Planner calendar) |
 | **Inventory** | studio | Products/materials; **alternatives** for client selections; **shipment tracking**; composable into Presentations |
+| **Notes** | **notes/** (`erganis-notes`) | Constructable documents, annotations, dialogue, bibliography — **shared** across Studio, Client, Lyceum |
 | **Documents** | studio | Formal file vault — certs, trade docs, attachments; **not** meeting notes |
-| **Notes** | studio | Meeting notes, client context, dictation, Zoom/Meet (TBD) |
 | **Design** | studio | **Creativity workspace** — spatial/concept exploration, palettes, FF&E intent, adjacency diagrams, room compare; feeds **Presentations** (see [Design catalog](#design)) |
 | **Presentations** | studio | **Customizable client proposals** (approvals, tax options); shareable outputs; embeds Inventory/Design via Core composition classes |
 | **Build** | studio | Drawings, MEP, **light schedules**, **IBC room planner**, **Tags** on drawing sets (optional **Inventory** links); **drawing approval workflow** (uses Core roles/users) |
@@ -928,6 +933,28 @@ Export/embed via Core composition classes → **Presentations** (Design does not
 **Example flow:** Designer builds a hardware selection in Inventory (3 alternatives, price + lead time each) → adds an Inventory composition block to a Presentations proposal → client sees options in Client portal and approves one.
 
 **Inventory ↔ Presentations ↔ Business:** Presentations displays pricing from Inventory/Business contracts; **cost verification** (are we charging correctly?) is a **Business** concern that validates against cost/margin rules before or during proposal send — see [Business](#business-vs-reports-separate-modules).
+
+### Notes (`erganis-notes`)
+
+**Path:** `notes/` · **Module package:** `notes/modules/notes/` · **Plan:** [`NOTES-ARCHITECTURE.md`](../notes/docs/NOTES-ARCHITECTURE.md)
+
+**Dependency graph:** `Core → erganis-notes → Studio | Client | Lyceum`. Not merged with Documents; not under `erganis-ui`.
+
+| Entity | Purpose |
+|--------|---------|
+| **Note** | Constructable document (kind = capability pack) |
+| **Annotation** | Quick single-author markup on a target; optional reactions |
+| **Dialogue** | Multi-party thread; images/attachments; client Q&A on proposals |
+| **Reference** | Bibliography (Notes-owned) |
+| **Connection** | Typed attach to any registered Public ID; ACL inherit or override |
+
+**Permissions:** Connection-level ACL inherits from target; overrides require higher clearance. Attachment size/type limits per role in Studio management.
+
+**Module dependency:** **Business requires Notes** — cannot enable Business without Notes.
+
+**Cross-module:** Communications may email-notify on dialogue events; Presentations uses dialogue for discussion and Core workflows for approval state.
+
+**Implementation:** Documentation + repo scaffold only — see [`NOTES-IMPLEMENTATION-PLAN.md`](../notes/docs/NOTES-IMPLEMENTATION-PLAN.md). v1 ships **kind-building components**; v2 ships undeletable default kinds.
 
 ### Notes vs Documents (separate modules)
 
@@ -1798,9 +1825,12 @@ See [§7 Studio module phases](#studio-module-implementation-phases) and [`STUDI
 - [ ] Formal files only — not meeting notes
 
 ### Notes
-- [ ] Meeting notes, client context, audio dictation
-- [ ] Zoom / Google Meet integration (scope TBD)
-- [ ] Meeting workspace — quick access to Presentations, floor plans, Documents
+- [ ] Shared `erganis-notes` repo — constructable kinds, annotations, dialogue, bibliography
+- [ ] Connection-level ACL; attachment limits per role
+- [ ] Client read + author dialogue/annotations; private client drafts (v1)
+- [ ] Business module requires Notes enabled
+- [ ] Communications email notify on client dialogue (event-driven)
+- [ ] v1: kind-building components; v2: undeletable default kinds (Meeting, Client, Research, …)
 
 ### Design
 
@@ -2556,5 +2586,5 @@ Kickoff decisions (P35 hybrid txn, P36 OIDC, module loader, schema-per-module, P
 | 2025-06-12 | **P37 module inheritance** — deferred; Public ID invariant; Core contract validation + mapping tool; modules implement; granular disable in v1 |
 | 2025-06-12 | **P39 test plan** — Jest platform-wide; Testcontainers + CI Postgres; GitHub Actions build/test from Phase 0 |
 | 2025-06-26 | **Phase 0 complete** — Nest shell in `core/services/`, `@erganis/platform`, health + Postgres readiness, Jest CI with Postgres service |
-| 2026-06-12 | **Module migrations policy** — Core-only migrator; first-party single `migrations/` folder; third-party mandatory `migrations/`; third-party forbidden from first-party/`platform` DDL; SQL validation in C4 |
+| 2026-07 | **erganis-notes** submodule — shared Notes module (`notes/`); constructable kinds; annotations vs dialogue; Business requires Notes; ACL in glossary; audit stays Core (C9) |
 | 2026-06-12 | **Planning split** — Core phases C0–C2 done; remaining Core C3–C11; Studio per-module slices (S0, S-D1, S-I1, …) |

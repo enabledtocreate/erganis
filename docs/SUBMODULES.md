@@ -1,9 +1,10 @@
 # Working with Erganis submodules
 
-The parent **erganis** repo (Erganis Platform) has **five submodules** (plus **`ui/`** scaffold — add as submodule when `erganis-ui` GitHub repo is created):
+The parent **erganis** repo (Erganis Platform) has **six submodules** (plus **`ui/`** scaffold — add as submodule when `erganis-ui` GitHub repo is created):
 
 - **core/** — `erganis-core` (contracts, data, infrastructure, services, packages, scripts)
 - **studio/** — `erganis-studio` (apps/studio, apps/client, modules/, shared/)
+- **notes/** — `erganis-notes` (shared Notes module — annotations, dialogue, bibliography)
 - **agora/** — `erganis-agora` (web/, api/, shared/)
 - **companion/** — `erganis-companion` (mobile app)
 - **lyceum/** — `erganis-lyceum` (Mnemosyne + Nomodeion study products)
@@ -11,7 +12,7 @@ The parent **erganis** repo (Erganis Platform) has **five submodules** (plus **`
 
 ## Why submodules?
 
-- **Core**, **Studio**, **Agora**, **Companion**, **Lyceum**, and **UI** can be cloned and used on their own.
+- **Core**, **Studio**, **Notes**, **Agora**, **Companion**, **Lyceum**, and **UI** can be cloned and used on their own.
 - The parent references specific commits so `git clone --recurse-submodules erganis` gives a known-good set.
 
 ## Common commands

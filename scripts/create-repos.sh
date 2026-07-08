@@ -10,6 +10,7 @@ repos=(
     "erganis-agora:Public vendor catalog — web, api, shared"
     "erganis-companion:Companion mobile app"
     "erganis-lyceum:Mnemosyne — historical design styles reference (web, optional api)"
+    "erganis-notes:Shared Notes module — constructable documents, annotations, dialogue, bibliography"
 )
 
 echo "Creating sub-repos under GitHub account: $ORG"

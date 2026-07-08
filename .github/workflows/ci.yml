@@ -29,6 +29,7 @@ jobs:
       JWT_SECRET: ci-test-jwt-secret
       AUTH_OIDC_MOCK: "true"
       AUTH_LOCAL_ENABLED: "true"
+      MODULES_ROOT: studio/modules
     steps:
       - uses: actions/checkout@v4
         with:
@@ -64,7 +65,9 @@ jobs:
         run: |
           cd core/packages/typescript && npm ci && npm run build
           cd ../../data/dal && npm ci && npm run build
-          cd ../../services
+          cd ../../../studio/modules/hello-world
+          npm install && npm run build
+          cd ../../../core/services
           npm ci
           npm run build
           npm test

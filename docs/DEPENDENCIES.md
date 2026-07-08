@@ -22,14 +22,17 @@
 | Repo | Depends on | How |
 |------|------------|-----|
 | **studio** | Core API | Surface API URL or `@erganis/sdk` |
+| **notes** | Core contracts, `@erganis/platform` | Module loaded by Core; contracts in `notes/contracts/` |
 | **agora** | Core contracts (types), Agora API | Shared schemas; web → agora/api |
 | **companion** | Core API | Public API URL or SDK subset |
+| **lyceum** | Core API, **erganis-notes** (when enabled) | Study Surfaces + shared Notes module |
 
 ## Cloning
 
 - **Full platform:** `git clone --recurse-submodules …/erganis.git`
 - **Core only:** `git clone …/erganis-core.git`
-- **Single app:** `erganis-studio`, `erganis-agora`, or `erganis-companion`
+- **Notes only:** `git clone …/erganis-notes.git`
+- **Single app:** `erganis-studio`, `erganis-notes`, `erganis-agora`, or `erganis-companion`
 
 ## API: internal vs public
 

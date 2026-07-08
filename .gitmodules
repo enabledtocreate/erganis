@@ -13,3 +13,6 @@
 [submodule "lyceum"]
 	path = lyceum
 	url = https://github.com/enabledtocreate/erganis-lyceum.git
+[submodule "notes"]
+	path = notes
+	url = https://github.com/enabledtocreate/erganis-notes.git

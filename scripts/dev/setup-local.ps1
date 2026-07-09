@@ -34,6 +34,6 @@ if ((Get-Command docker -ErrorAction SilentlyContinue) -and (Test-Path $composeF
 
 Write-Host ""
 Write-Host "Setup complete." -ForegroundColor Green
-Write-Host "  - Core Postgres: localhost:5432 (db erganis)"
+Write-Host "  - Core Postgres: 127.0.0.1:5432 (db erganis; use 127.0.0.1 on Windows + Docker)"
 Write-Host "  - Agora Postgres: agora/api/.env (db erganis_agora)"
 Write-Host "  - Jobs: pg-boss (PostgreSQL); Redis not required for v1."

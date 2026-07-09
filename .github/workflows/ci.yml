@@ -30,6 +30,8 @@ jobs:
       AUTH_OIDC_MOCK: "true"
       AUTH_LOCAL_ENABLED: "true"
       MODULES_ROOT: studio/modules
+      MODULES_EXTRA_ROOTS: developer
+      CORS_ORIGINS: http://localhost:3000
     steps:
       - uses: actions/checkout@v4
         with:
@@ -67,7 +69,13 @@ jobs:
           cd ../../data/dal && npm ci && npm run build
           cd ../../../studio/modules/hello-world
           npm install && npm run build
-          cd ../../../core/services
+          cd ../inventory
+          npm install && npm run build
+          cd ../projects
+          npm install && npm run build
+          cd ../../../developer
+          npm install && npm run build
+          cd ../core/services
           npm ci
           npm run build
           npm test
@@ -88,7 +96,12 @@ jobs:
       - name: Test studio
         run: |
           if [ -f studio/package.json ]; then
-            cd studio && npm ci && npm test && cd ..
+            cd studio
+            npm install
+            npm run build -w @erganis/studio-shared
+            npm test -w @erganis/studio-shared
+            npm run build:web
+            cd ..
           fi
 
       - name: Test agora

@@ -1,0 +1,25 @@
+{
+  "id": "erganis.developer",
+  "name": "Developer",
+  "version": "0.1.0",
+  "erganisCoreVersion": "^0.1.0",
+  "description": "Module graph, ID links, and contract introspection for pipeline debugging",
+  "shipByDefault": false,
+  "entryPoint": "./dist/index.js",
+  "contributions": {
+    "operations": [
+      {
+        "surfaceId": "developer",
+        "action": "load",
+        "stepId": "developer-graph",
+        "handler": "loadDeveloperGraph",
+        "failureClass": "required",
+        "phase": "db"
+      }
+    ]
+  },
+  "migrations": [
+    { "version": "001", "path": "./migrations/001_developer_catalog.sql" },
+    { "version": "002", "path": "./migrations/002_link_type_seed.sql" }
+  ]
+}
